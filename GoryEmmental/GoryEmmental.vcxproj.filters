@@ -24,9 +24,15 @@
     <ClInclude Include="EmmentalDefinition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NativeDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Emmental.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NativeDefinition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
