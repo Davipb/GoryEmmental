@@ -108,11 +108,13 @@ void Emmental::GenerateDefaultSymbols()
 	SymbolMap['~'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
 	{ 
 		SymbolType symbol = interpreter->PopStack();
-		
-		if (symbol == 0)
-			symbol = 256;
+		SymbolType log2;
 
-		SymbolType log2 = (SymbolType)std::log2(symbol);
+		if (symbol == 0)
+			log2 = 8;
+		else
+			log2 = (SymbolType)std::log2(symbol);
+
 		interpreter->PushStack(log2); 
 	});
 	// Enqueue top stack symbol (doesn't remove it from the stack)
@@ -123,7 +125,7 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->PushStack(symbol);
 	});
 	// Dequeue to stack
-	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['V'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->Dequeue();
 		interpreter->PushStack(symbol);
@@ -131,7 +133,7 @@ void Emmental::GenerateDefaultSymbols()
 	// Duplicate front queue symbol
 	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->Dequeue();
+		SymbolType symbol = interpreter->PopStack();
 		interpreter->PushStack(symbol);
 		interpreter->PushStack(symbol);
 	});
