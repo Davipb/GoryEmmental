@@ -7,17 +7,6 @@ Emmental::Emmental(std::basic_istream<SymbolType>* const inputStream, std::basic
 	
 }
 
-Emmental::~Emmental()
-{
-	for (auto& symbol : SymbolMap)
-	{
-		delete symbol.second;
-		symbol.second = nullptr;
-	}
-
-	SymbolMap.clear();
-}
-
 SymbolType Emmental::PopStack()
 {
 	SymbolType result = ProgramStack.top();
@@ -65,23 +54,23 @@ EmmentalDefinition* Emmental::GetDefinition(SymbolType symbol)
 	if (result == SymbolMap.end())
 		return nullptr;
 
-	return result->second;
+	return result->second.get();
 }
 
-std::map<SymbolType, EmmentalDefinition*>& Emmental::CopyDefinitions()
+std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> Emmental::CopyDefinitions()
 {
-	return std::map<SymbolType, EmmentalDefinition*>(SymbolMap);
+	return SymbolMap;
 }
 
 void Emmental::GenerateDefaultSymbols()
 {
 	// Push NULL to the stack
-	SymbolMap['#'] = new NativeDefinition([](Emmental* interpreter) { interpreter->PushStack(0); });
+	SymbolMap['#'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(0); });
 
 	// 0 through 9 pop a stack symbol, multiply it by ten, add themselves to the multiplied number and push the result to the stack.
 	for (SymbolType i = '0'; i <= '9'; i++)
 	{
-		SymbolMap[i] = new NativeDefinition([i](Emmental* interpreter)
+		SymbolMap[i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter)
 		{
 			SymbolType popped = interpreter->PopStack();
 			interpreter->PushStack(i + popped * 10);
@@ -89,9 +78,9 @@ void Emmental::GenerateDefaultSymbols()
 	}
 
 	// Add two stack symbols and push result to stack
-	SymbolMap['+'] = new NativeDefinition([](Emmental* interpreter) { interpreter->PushStack(interpreter->PopStack() + interpreter->PopStack()); });
+	SymbolMap['+'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(interpreter->PopStack() + interpreter->PopStack()); });
 	// Subtract first from second stack symbol and push result to stack
-	SymbolMap['-'] = new NativeDefinition([](Emmental* interpreter) 
+	SymbolMap['-'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
 	{ 
 		SymbolType first = interpreter->PopStack();
 		SymbolType second = interpreter->PopStack();
@@ -99,7 +88,7 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->PushStack(second - first); 
 	});
 	// Push discrete log2 (highest set bit) of stack symbol (0 is treated as 256)
-	SymbolMap['~'] = new NativeDefinition([](Emmental* interpreter) 
+	SymbolMap['~'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
 	{ 
 		SymbolType symbol = interpreter->PopStack();
 		
@@ -110,40 +99,40 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->PushStack(log2); 
 	});
 	// Enqueue top stack symbol (doesn't remove it from the stack)
-	SymbolMap['^'] = new NativeDefinition([](Emmental* interpreter)
+	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->PopStack();
 		interpreter->Enqueue(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Dequeue to stack
-	SymbolMap['^'] = new NativeDefinition([](Emmental* interpreter)
+	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->Dequeue();
 		interpreter->PushStack(symbol);
 	});
 	// Duplicate front queue symbol
-	SymbolMap[':'] = new NativeDefinition([](Emmental* interpreter)
+	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->Dequeue();
 		interpreter->PushStack(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Pop stack to output
-	SymbolMap['.'] = new NativeDefinition([](Emmental* interpreter)
+	SymbolMap['.'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->PopStack();
 		interpreter->OutputStream->put(symbol);
 	});
 	// Get input symbol and push to stack
-	SymbolMap[','] = new NativeDefinition([](Emmental* interpreter)
+	SymbolMap[','] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol;
 		interpreter->InputStream->get(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// For convenience, ';' puts ';' on the stack.
-	SymbolMap[';'] = new NativeDefinition([](Emmental* interpreter) { interpreter->PushStack(';'); });
+	SymbolMap[';'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(';'); });
 
 	// TODO: '!', '?'
 }

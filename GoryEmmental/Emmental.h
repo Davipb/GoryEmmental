@@ -4,6 +4,7 @@
 #include <queue>
 #include <map>
 #include <vector>
+#include <memory>
 #include "Config.h"
 #include "NativeDefinition.h"
 
@@ -16,7 +17,6 @@ public:
 	// Creates a new Emmental interpreter with a specified IO Streams
 	// Note: The interpreter does not take ownership of the stream. It must be deleted manually.
 	Emmental(std::basic_istream<SymbolType>* const inputStream, std::basic_ostream<SymbolType>* const outputStream);
-	~Emmental();
 
 	// Gets the item on top of the stack and removes it from the stack.
 	SymbolType PopStack();
@@ -33,7 +33,7 @@ public:
 	// Gets the current definition of a symbol.
 	class EmmentalDefinition* GetDefinition(SymbolType symbol);
 	// Makes a copy of all definitions currently in effect.
-	std::map<SymbolType, EmmentalDefinition*>& CopyDefinitions();
+	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> CopyDefinitions();
 
 	void Interpret(SymbolType symbol);
 
@@ -41,7 +41,7 @@ private:
 	std::stack<SymbolType> ProgramStack;
 	std::queue<SymbolType> ProgramQueue;
 
-	std::map<SymbolType, EmmentalDefinition*> SymbolMap;
+	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> SymbolMap;
 
 	void GenerateDefaultSymbols();
 };
