@@ -9,7 +9,7 @@ int main()
 	while (true)
 	{
 		std::cout << "> ";
-		SymbolType symbol;
+		SymbolT symbol;
 		std::cin >> symbol;
 
 		interpreter.Interpret(symbol);
@@ -17,7 +17,7 @@ int main()
 		std::cout << std::endl;
 
 		std::cout << "Stack: ";
-		std::stack<SymbolType> stack = interpreter.GetStack();
+		std::stack<SymbolT> stack = interpreter.GetStack();
 		while (!stack.empty())
 		{
 			std::cout << " " << std::to_string(stack.top());
@@ -26,7 +26,7 @@ int main()
 		std::cout << std::endl;
 
 		std::cout << "Queue: ";
-		std::queue<SymbolType> queue = interpreter.GetQueue();
+		std::queue<SymbolT> queue = interpreter.GetQueue();
 		while (!queue.empty())
 		{
 			std::cout << " " << std::to_string(queue.front());

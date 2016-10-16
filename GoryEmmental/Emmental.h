@@ -19,39 +19,39 @@ public:
 	Emmental(std::istream& inputStream, std::ostream& outputStream);
 
 	// Gets a copy of the current stack
-	std::stack<SymbolType> GetStack();
+	std::stack<SymbolT> GetStack();
 	// Gets the item on top of the stack and removes it from the stack.
-	SymbolType PopStack();
+	SymbolT PopStack();
 	// Reads symbols off the stack until ';' is encountered, and returns the symbols in reverse popping order.
-	std::vector<SymbolType> PopProgram();
+	ProgramT PopProgram();
 	// Pushes an item to the top of the stack.
-	void PushStack(SymbolType item);
+	void PushStack(SymbolT item);
 
 	// Gets a copy of the current queue
-	std::queue<SymbolType> GetQueue();
+	std::queue<SymbolT> GetQueue();
 	// Gets the item at the top of the queue and removes it from the queue.
-	SymbolType Dequeue();
+	SymbolT Dequeue();
 	// Puts an item at the back of the queue.
-	void Enqueue(SymbolType item);
+	void Enqueue(SymbolT item);
 
 	// Makes a copy of all definitions currently in effect.
-	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> CopyDefinitions();
+	SymbolMapT CopyDefinitions();
 
 	// Executes a symbol in the current interpreter state
-	void Interpret(SymbolType symbol);
+	void Interpret(SymbolT symbol);
 	// Executes a symbol using the selected interpreter state
-	void Interpret(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state);
+	void Interpret(SymbolT symbol, const SymbolMapT& state);
 
 	// Redefines a symbol
-	void Redefine(SymbolType symbol, std::shared_ptr<EmmentalDefinition> definition);
+	void Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition);
 
 private:
-	std::stack<SymbolType> ProgramStack;
-	std::queue<SymbolType> ProgramQueue;
+	std::stack<SymbolT> ProgramStack;
+	std::queue<SymbolT> ProgramQueue;
 
-	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> SymbolMap;
+	SymbolMapT SymbolMap;
 
 	void GenerateDefaultSymbols();
 
-	EmmentalDefinition* GetDefinition(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state);
+	EmmentalDefinition* GetDefinition(SymbolT symbol, const SymbolMapT& state);
 };

@@ -8,23 +8,23 @@ Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream)
 	GenerateDefaultSymbols();
 }
 
-std::stack<SymbolType> Emmental::GetStack()
+std::stack<SymbolT> Emmental::GetStack()
 {
 	return ProgramStack;
 }
 
-SymbolType Emmental::PopStack()
+SymbolT Emmental::PopStack()
 {
-	SymbolType result = ProgramStack.top();
+	SymbolT result = ProgramStack.top();
 	ProgramStack.pop();
 
 	return result;
 }
 
-std::vector<SymbolType> Emmental::PopProgram()
+ProgramT Emmental::PopProgram()
 {
-	std::vector<SymbolType> result;
-	SymbolType symbol = PopStack();
+	ProgramT result;
+	SymbolT symbol = PopStack();
 	
 	while (symbol != ';')
 	{
@@ -36,37 +36,37 @@ std::vector<SymbolType> Emmental::PopProgram()
 	return result;
 }
 
-void Emmental::PushStack(SymbolType item)
+void Emmental::PushStack(SymbolT item)
 {
 	ProgramStack.push(item);
 }
 
-std::queue<SymbolType> Emmental::GetQueue()
+std::queue<SymbolT> Emmental::GetQueue()
 {
 	return ProgramQueue;
 }
 
-SymbolType Emmental::Dequeue()
+SymbolT Emmental::Dequeue()
 {
-	SymbolType result = ProgramQueue.front();
+	SymbolT result = ProgramQueue.front();
 	ProgramQueue.pop();
 
 	return result;
 }
 
-void Emmental::Enqueue(SymbolType item)
+void Emmental::Enqueue(SymbolT item)
 {
 	ProgramQueue.push(item);
 }
 
-std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> Emmental::CopyDefinitions()
+SymbolMapT Emmental::CopyDefinitions()
 {
 	return SymbolMap;
 }
 
-void Emmental::Interpret(SymbolType symbol) { Interpret(symbol, SymbolMap); }
+void Emmental::Interpret(SymbolT symbol) { Interpret(symbol, SymbolMap); }
 
-void Emmental::Interpret(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state)
+void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state)
 {
 	EmmentalDefinition* definition = GetDefinition(symbol, state);
 
@@ -74,7 +74,7 @@ void Emmental::Interpret(SymbolType symbol, const std::map<SymbolType, std::shar
 		definition->Execute(this);
 }
 
-void Emmental::Redefine(SymbolType symbol, std::shared_ptr<EmmentalDefinition> definition)
+void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition)
 {
 	SymbolMap[symbol] = definition;
 }
@@ -85,11 +85,11 @@ void Emmental::GenerateDefaultSymbols()
 	SymbolMap['#'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(0); });
 
 	// 0 through 9 pop a stack symbol, multiply it by ten, add themselves to the multiplied number and push the result to the stack.
-	for (SymbolType i = 0; i <= 9; i++)
+	for (SymbolT i = 0; i <= 9; i++)
 	{
 		SymbolMap['0' + i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter)
 		{
-			SymbolType popped = interpreter->PopStack();
+			SymbolT popped = interpreter->PopStack();
 			interpreter->PushStack(i + popped * 10);
 		});
 	}
@@ -99,54 +99,54 @@ void Emmental::GenerateDefaultSymbols()
 	// Subtract first from second stack symbol and push result to stack
 	SymbolMap['-'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
 	{ 
-		SymbolType first = interpreter->PopStack();
-		SymbolType second = interpreter->PopStack();
+		SymbolT first = interpreter->PopStack();
+		SymbolT second = interpreter->PopStack();
 
 		interpreter->PushStack(second - first); 
 	});
 	// Push discrete log2 (highest set bit) of stack symbol (0 is treated as 256)
 	SymbolMap['~'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
 	{ 
-		SymbolType symbol = interpreter->PopStack();
-		SymbolType log2;
+		SymbolT symbol = interpreter->PopStack();
+		SymbolT log2;
 
 		if (symbol == 0)
 			log2 = 8;
 		else
-			log2 = (SymbolType)std::log2(symbol);
+			log2 = (SymbolT)std::log2(symbol);
 
 		interpreter->PushStack(log2); 
 	});
 	// Enqueue top stack symbol (doesn't remove it from the stack)
 	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->PopStack();
+		SymbolT symbol = interpreter->PopStack();
 		interpreter->Enqueue(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Dequeue to stack
 	SymbolMap['V'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->Dequeue();
+		SymbolT symbol = interpreter->Dequeue();
 		interpreter->PushStack(symbol);
 	});
 	// Duplicate front queue symbol
 	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->PopStack();
+		SymbolT symbol = interpreter->PopStack();
 		interpreter->PushStack(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Pop stack to output
 	SymbolMap['.'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->PopStack();
+		SymbolT symbol = interpreter->PopStack();
 		interpreter->OutputStream << symbol;
 	});
 	// Get input symbol and push to stack
 	SymbolMap[','] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol;
+		SymbolT symbol;
 		interpreter->InputStream >> symbol;
 		interpreter->PushStack(symbol);
 	});
@@ -155,7 +155,7 @@ void Emmental::GenerateDefaultSymbols()
 	// Eval: Interpret the top stack symbol
 	SymbolMap['?'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->PopStack();
+		SymbolT symbol = interpreter->PopStack();
 		interpreter->Interpret(symbol);
 	});
 	
@@ -163,8 +163,8 @@ void Emmental::GenerateDefaultSymbols()
 	// Pop a symbol and a program from the stack. Redefine the symbol as the popped program.
 	SymbolMap['!'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
-		SymbolType symbol = interpreter->PopStack();
-		std::vector<SymbolType> program = interpreter->PopProgram();
+		SymbolT symbol = interpreter->PopStack();
+		ProgramT program = interpreter->PopProgram();
 
 		interpreter->Redefine(
 			symbol, 
@@ -174,7 +174,7 @@ void Emmental::GenerateDefaultSymbols()
 	});
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state)
+EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol, const SymbolMapT& state)
 {
 	auto result = state.find(symbol);
 
