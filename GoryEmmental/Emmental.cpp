@@ -59,9 +59,20 @@ void Emmental::Enqueue(SymbolT item)
 	ProgramQueue.push(item);
 }
 
-SymbolMapT Emmental::CopyDefinitions()
+SymbolMapT Emmental::CopyDefinitions(ProgramT program)
 {
-	return SymbolMap;
+	SymbolMapT result;
+	auto end = std::unique(program.begin(), program.end());
+
+	for (auto it = program.begin(); it != end; ++it)
+	{
+		auto definition = SymbolMap.find(*it);
+
+		if (definition != SymbolMap.end())
+			result[*it] = definition->second;
+	}
+
+	return result;
 }
 
 void Emmental::Interpret(SymbolT symbol) { Interpret(symbol, SymbolMap); }
@@ -165,10 +176,11 @@ void Emmental::GenerateDefaultSymbols()
 	{
 		SymbolT symbol = interpreter->PopStack();
 		ProgramT program = interpreter->PopProgram();
+		SymbolMapT state = interpreter->CopyDefinitions(program);
 
 		interpreter->Redefine(
 			symbol, 
-			std::make_shared<InterpretedDefinition>(program, interpreter->CopyDefinitions())
+			std::make_shared<InterpretedDefinition>(program, state)
 		);
 
 	});

@@ -34,8 +34,8 @@ public:
 	// Puts an item at the back of the queue.
 	void Enqueue(SymbolT item);
 
-	// Makes a copy of all definitions currently in effect.
-	SymbolMapT CopyDefinitions();
+	// Makes a copy of all current definitions used in a program.
+	SymbolMapT CopyDefinitions(ProgramT program);
 
 	// Executes a symbol in the current interpreter state
 	void Interpret(SymbolT symbol);
