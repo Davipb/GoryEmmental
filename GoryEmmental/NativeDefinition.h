@@ -7,9 +7,9 @@ class NativeDefinition :
 	public EmmentalDefinition
 {
 public:	
-	NativeDefinition(std::function<void(Emmental*)> function);
-	virtual void Execute(Emmental* interpreter) override;
+	NativeDefinition(std::function<void(Emmental*, std::size_t)> function);
+	virtual void Execute(Emmental* interpreter, std::size_t recursionLevel) override;
 
 private:
-	std::function<void(Emmental*)> Function;
+	std::function<void(Emmental*, std::size_t)> Function;
 };

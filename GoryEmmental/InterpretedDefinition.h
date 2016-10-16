@@ -9,11 +9,11 @@ class InterpretedDefinition :
 	public EmmentalDefinition
 {
 public:
-	InterpretedDefinition(const std::vector<SymbolT>& program, const std::map<SymbolT, std::shared_ptr<EmmentalDefinition>>& state);
-	void Execute(Emmental* interpreter) override;
+	InterpretedDefinition(const ProgramT& program, const SymbolMapT& state);
+	void Execute(Emmental* interpreter, std::size_t recursionLevel) override;
 
 private:
-	std::vector<SymbolT> Program;
-	std::map<SymbolT, std::shared_ptr<EmmentalDefinition>> CapturedState;
+	ProgramT Program;
+	SymbolMapT CapturedState;
 };
 

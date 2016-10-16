@@ -4,7 +4,7 @@
 
 int main()
 {
-	Emmental interpreter(std::cin, std::cout);
+	Emmental interpreter(std::cin, std::cout, std::cerr);
 
 	while (true)
 	{

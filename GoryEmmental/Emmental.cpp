@@ -2,8 +2,8 @@
 #include "NativeDefinition.h"
 #include "InterpretedDefinition.h"
 
-Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream)
-	: InputStream(inputStream), OutputStream(outputStream)
+Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream, std::ostream& errorStream)
+	: InputStream(inputStream), OutputStream(outputStream), ErrorStream(errorStream)
 {
 	GenerateDefaultSymbols();
 }
@@ -15,6 +15,12 @@ std::stack<SymbolT> Emmental::GetStack()
 
 SymbolT Emmental::PopStack()
 {
+	if (ProgramStack.empty())
+	{
+		ErrorStream << "Error: Tried popping symbol from empty stack. Returning default value." << std::endl;
+		return SymbolT();
+	}
+
 	SymbolT result = ProgramStack.top();
 	ProgramStack.pop();
 
@@ -23,13 +29,28 @@ SymbolT Emmental::PopStack()
 
 ProgramT Emmental::PopProgram()
 {
+	if (ProgramStack.empty())
+	{
+		ErrorStream << "Error: Tried popping program from empty stack. Returning default program." << std::endl;
+		return ProgramT();
+	}
+
 	ProgramT result;
 	SymbolT symbol = PopStack();
 	
 	while (symbol != ';')
 	{
 		result.push_back(symbol);
-		symbol = PopStack();
+
+		if (ProgramStack.empty())
+		{
+			ErrorStream << "Error: Stack ran out before ';' was found to terminate a program. Returning incomplete program." << std::endl;
+			break;
+		}
+		else
+		{
+			symbol = PopStack();
+		}
 	}
 
 	std::reverse(result.begin(), result.end());
@@ -38,6 +59,12 @@ ProgramT Emmental::PopProgram()
 
 void Emmental::PushStack(SymbolT item)
 {
+	if (ProgramStack.size() >= EMMENTAL_MAX_STACK_SIZE)
+	{
+		ErrorStream << "Error: Tried to push symbol to full stack. Ignoring." << std::endl;
+		return;
+	}
+
 	ProgramStack.push(item);
 }
 
@@ -48,6 +75,12 @@ std::queue<SymbolT> Emmental::GetQueue()
 
 SymbolT Emmental::Dequeue()
 {
+	if (ProgramQueue.empty())
+	{
+		ErrorStream << "Error: Tried dequeuing symbol from empty queue. Returning default value." << std::endl;
+		return SymbolT();
+	}
+
 	SymbolT result = ProgramQueue.front();
 	ProgramQueue.pop();
 
@@ -56,11 +89,20 @@ SymbolT Emmental::Dequeue()
 
 void Emmental::Enqueue(SymbolT item)
 {
+	if (ProgramQueue.size() >= EMMENTAL_MAX_QUEUE_SIZE)
+	{
+		ErrorStream << "Error: Tried to enqueue symbol to full queue. Ignoring." << std::endl;
+		return;
+	}
+
 	ProgramQueue.push(item);
 }
 
 SymbolMapT Emmental::CopyDefinitions(ProgramT program)
 {
+	if (program.empty())
+		return SymbolMapT();
+
 	SymbolMapT result;
 	auto end = std::unique(program.begin(), program.end());
 
@@ -76,29 +118,42 @@ SymbolMapT Emmental::CopyDefinitions(ProgramT program)
 }
 
 void Emmental::Interpret(SymbolT symbol) { Interpret(symbol, SymbolMap); }
+void Emmental::Interpret(SymbolT symbol, std::size_t recursionLevel) { Interpret(symbol, SymbolMap, recursionLevel); }
+void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state) { Interpret(symbol, state, 0); }
 
-void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state)
+void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t recursionLevel)
 {
+	if (recursionLevel >= EMMENTAL_MAX_RECURSION_LEVEL)
+	{
+		ErrorStream << "Error: Recursion level too high. Ignoring symbol '" << symbol << "'." << std::endl;
+		return;
+	}
+
 	EmmentalDefinition* definition = GetDefinition(symbol, state);
 
 	if (definition)
-		definition->Execute(this);
+		definition->Execute(this, recursionLevel + 1);
+	else
+		ErrorStream << "Warning: Tried to interpret undefined symbol '" << symbol << "'. Ignoring symbol." << std::endl;
 }
 
 void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition)
 {
-	SymbolMap[symbol] = definition;
+	if (definition)
+		SymbolMap[symbol] = definition;
+	else
+		ErrorStream << "Error: Tried to redefine symbol '" << symbol << "' with a null definition." << std::endl;
 }
 
 void Emmental::GenerateDefaultSymbols()
 {
 	// Push NULL to the stack
-	SymbolMap['#'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(0); });
+	SymbolMap['#'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t) { interpreter->PushStack(0); });
 
 	// 0 through 9 pop a stack symbol, multiply it by ten, add themselves to the multiplied number and push the result to the stack.
 	for (SymbolT i = 0; i <= 9; i++)
 	{
-		SymbolMap['0' + i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter)
+		SymbolMap['0' + i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter, std::size_t)
 		{
 			SymbolT popped = interpreter->PopStack();
 			interpreter->PushStack(i + popped * 10);
@@ -106,9 +161,12 @@ void Emmental::GenerateDefaultSymbols()
 	}
 
 	// Add two stack symbols and push result to stack
-	SymbolMap['+'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(interpreter->PopStack() + interpreter->PopStack()); });
+	SymbolMap['+'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
+	{ 
+		interpreter->PushStack(interpreter->PopStack() + interpreter->PopStack()); 
+	});
 	// Subtract first from second stack symbol and push result to stack
-	SymbolMap['-'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
+	SymbolMap['-'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{ 
 		SymbolT first = interpreter->PopStack();
 		SymbolT second = interpreter->PopStack();
@@ -116,7 +174,7 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->PushStack(second - first); 
 	});
 	// Push discrete log2 (highest set bit) of stack symbol (0 is treated as 256)
-	SymbolMap['~'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) 
+	SymbolMap['~'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{ 
 		SymbolT symbol = interpreter->PopStack();
 		SymbolT log2;
@@ -129,50 +187,50 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->PushStack(log2); 
 	});
 	// Enqueue top stack symbol (doesn't remove it from the stack)
-	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['^'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->PopStack();
 		interpreter->Enqueue(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Dequeue to stack
-	SymbolMap['V'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['V'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->Dequeue();
 		interpreter->PushStack(symbol);
 	});
 	// Duplicate front queue symbol
-	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->PopStack();
 		interpreter->PushStack(symbol);
 		interpreter->PushStack(symbol);
 	});
 	// Pop stack to output
-	SymbolMap['.'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['.'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->PopStack();
 		interpreter->OutputStream << symbol;
 	});
 	// Get input symbol and push to stack
-	SymbolMap[','] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap[','] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol;
 		interpreter->InputStream >> symbol;
 		interpreter->PushStack(symbol);
 	});
 	// For convenience, ';' puts ';' on the stack.
-	SymbolMap[';'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(';'); });
+	SymbolMap[';'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t) { interpreter->PushStack(';'); });
 	// Eval: Interpret the top stack symbol
-	SymbolMap['?'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['?'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t recursionLevel)
 	{
 		SymbolT symbol = interpreter->PopStack();
-		interpreter->Interpret(symbol);
+		interpreter->Interpret(symbol, recursionLevel);
 	});
 	
 	// This is the main command of the Emmental: Supplant.
 	// Pop a symbol and a program from the stack. Redefine the symbol as the popped program.
-	SymbolMap['!'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	SymbolMap['!'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->PopStack();
 		ProgramT program = interpreter->PopProgram();
