@@ -1,5 +1,6 @@
 #include "InteractiveInterpreter.h"
 #include "InterpretedDefinition.h"
+#include <iomanip>
 
 InteractiveInterpreter::InteractiveInterpreter(Emmental* const interpreter)
 	: Interpreter(interpreter)
@@ -9,6 +10,11 @@ InteractiveInterpreter::InteractiveInterpreter(Emmental* const interpreter)
 
 int InteractiveInterpreter::RunLoop()
 {
+	Interpreter->OutputStream << "Entering Interactive Mode" << std::endl;
+	Interpreter->OutputStream << "Inputs not starting with '__' will be interpreted by Emmental." << std::endl;
+	Interpreter->OutputStream << "Type __help for a list of commands, or __exit to exit." << std::endl;
+
+
 	while (true)
 	{
 		Interpreter->OutputStream << std::endl;
@@ -17,7 +23,7 @@ int InteractiveInterpreter::RunLoop()
 		std::getline(Interpreter->InputStream, input);
 
 		// Special command to exit the loop
-		if (input == "__exit")
+		if (input.find("__exit") == 0)
 			return EXIT_SUCCESS;
 		
 		if (ParseCommand(input))
@@ -48,10 +54,28 @@ void InteractiveInterpreter::GenerateCommands()
 	AddCommand(InteractiveCommand("help", "Shows this list.", nullptr));
 
 	// Normal commands here
-	AddCommand(InteractiveCommand("reset", "Resets the interpreter's symbol definitions.", [](Emmental* interpreter, std::string)
+	AddCommand(InteractiveCommand("reset", "Resets the interpreter back to its original state.", [](Emmental* interpreter, std::string)
 	{
 		interpreter->Reset();
-		interpreter->OutputStream << "Default symbol definitions restored." << std::endl;
+		interpreter->OutputStream << "Interpreter reset." << std::endl;
+	}));
+
+	AddCommand(InteractiveCommand("clearstack", "Clears the stack.", [](Emmental* interpreter, std::string)
+	{
+		interpreter->ClearStack();
+		interpreter->OutputStream << "Stack cleared." << std::endl;
+	}));
+
+	AddCommand(InteractiveCommand("clearqueue", "Clears the queue.", [](Emmental* interpreter, std::string)
+	{
+		interpreter->ClearQueue();
+		interpreter->OutputStream << "Queue cleared." << std::endl;
+	}));
+
+	AddCommand(InteractiveCommand("resetdefs", "Resets all symbol definitions back to their original native definitions.", [](Emmental* interpreter, std::string)
+	{
+		interpreter->ResetDefinitions();
+		interpreter->OutputStream << "Symbol definitions reset to original native definitions." << std::endl;
 	}));
 
 	AddCommand(InteractiveCommand("debug", "Toggles debug mode on/off", [&](Emmental* interpreter, std::string)
@@ -109,16 +133,17 @@ void InteractiveInterpreter::GenerateCommands()
 				return;
 			}
 
-			interpreter->OutputStream << std::to_string(symbol) << " '" << symbol << "' -> ";
+			interpreter->OutputStream << std::setw(3) << std::to_string(symbol) << " '" << symbol << "' -> ";
 
 			EmmentalDefinition* definition = interpreter->GetDefinition(symbol);
-			if (dynamic_cast<NativeDefinition*>(definition) == nullptr)
+			InterpretedDefinition* interpreted = dynamic_cast<InterpretedDefinition*>(definition);
+
+			if (interpreted == nullptr)
 			{
 				interpreter->OutputStream << "(Native)" << std::endl;
 				return;
 			}
-
-			InterpretedDefinition* interpreted = dynamic_cast<InterpretedDefinition*>(definition);
+			
 			for (auto&& x : interpreted->GetProgram())
 				interpreter->OutputStream << x;
 
@@ -133,7 +158,7 @@ void InteractiveInterpreter::GenerateCommands()
 	{
 		interpreter->OutputStream << "Gory Emmental Interpreter 1.0.0 by Davipb" << std::endl;
 		interpreter->OutputStream << "Symbol Type: " << typeid(SymbolT).name() << std::endl;
-		interpreter->OutputStream << "Symbol Size: " << sizeof(SymbolT) << " bytes" << std::endl;
+		interpreter->OutputStream << "Symbol Size: " << sizeof(SymbolT) << " byte(s)" << std::endl;
 		interpreter->OutputStream << "Max Stack Size: " << EMMENTAL_MAX_STACK_SIZE << std::endl;
 		interpreter->OutputStream << "Max Queue Size: " << EMMENTAL_MAX_QUEUE_SIZE << std::endl;
 		interpreter->OutputStream << "Max Recursion Level: " << EMMENTAL_MAX_RECURSION_LEVEL << std::endl;
@@ -177,7 +202,7 @@ void InteractiveInterpreter::DisplayMap(const SymbolMapT& map, std::ostream& out
 {
 	for (auto&& pair : map)
 	{
-		output << std::to_string(pair.first) << " (" << pair.first << ")";
+		output << std::setw(3) << std::to_string(pair.first) << " '" << pair.first << "'";
 		output << " -> ";
 
 		InterpretedDefinition* interpreted = dynamic_cast<InterpretedDefinition*>(pair.second.get());
