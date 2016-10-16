@@ -119,6 +119,7 @@
   <ItemGroup>
     <ClCompile Include="Emmental.cpp" />
     <ClCompile Include="InterpretedDefinition.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="NativeDefinition.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

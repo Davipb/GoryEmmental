@@ -11,13 +11,15 @@
 class Emmental
 {
 public:
-	std::basic_istream<SymbolType>* const InputStream;
-	std::basic_ostream<SymbolType>* const OutputStream;
+	std::istream& InputStream;
+	std::ostream& OutputStream;
 
 	// Creates a new Emmental interpreter with a specified IO Streams
 	// Note: The interpreter does not take ownership of the stream. It must be deleted manually.
-	Emmental(std::basic_istream<SymbolType>* const inputStream, std::basic_ostream<SymbolType>* const outputStream);
+	Emmental(std::istream& inputStream, std::ostream& outputStream);
 
+	// Gets a copy of the current stack
+	std::stack<SymbolType> GetStack();
 	// Gets the item on top of the stack and removes it from the stack.
 	SymbolType PopStack();
 	// Reads symbols off the stack until ';' is encountered, and returns the symbols in reverse popping order.
@@ -25,6 +27,8 @@ public:
 	// Pushes an item to the top of the stack.
 	void PushStack(SymbolType item);
 
+	// Gets a copy of the current queue
+	std::queue<SymbolType> GetQueue();
 	// Gets the item at the top of the queue and removes it from the queue.
 	SymbolType Dequeue();
 	// Puts an item at the back of the queue.

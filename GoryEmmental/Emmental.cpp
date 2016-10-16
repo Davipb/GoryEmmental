@@ -2,10 +2,15 @@
 #include "NativeDefinition.h"
 #include "InterpretedDefinition.h"
 
-Emmental::Emmental(std::basic_istream<SymbolType>* const inputStream, std::basic_ostream<SymbolType>* const outputStream)
+Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream)
 	: InputStream(inputStream), OutputStream(outputStream)
 {
-	
+	GenerateDefaultSymbols();
+}
+
+std::stack<SymbolType> Emmental::GetStack()
+{
+	return ProgramStack;
 }
 
 SymbolType Emmental::PopStack()
@@ -24,6 +29,7 @@ std::vector<SymbolType> Emmental::PopProgram()
 	while (symbol != ';')
 	{
 		result.push_back(symbol);
+		symbol = PopStack();
 	}
 
 	std::reverse(result.begin(), result.end());
@@ -33,6 +39,11 @@ std::vector<SymbolType> Emmental::PopProgram()
 void Emmental::PushStack(SymbolType item)
 {
 	ProgramStack.push(item);
+}
+
+std::queue<SymbolType> Emmental::GetQueue()
+{
+	return ProgramQueue;
 }
 
 SymbolType Emmental::Dequeue()
@@ -74,9 +85,9 @@ void Emmental::GenerateDefaultSymbols()
 	SymbolMap['#'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(0); });
 
 	// 0 through 9 pop a stack symbol, multiply it by ten, add themselves to the multiplied number and push the result to the stack.
-	for (SymbolType i = '0'; i <= '9'; i++)
+	for (SymbolType i = 0; i <= 9; i++)
 	{
-		SymbolMap[i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter)
+		SymbolMap['0' + i] = std::make_shared<NativeDefinition>([i](Emmental* interpreter)
 		{
 			SymbolType popped = interpreter->PopStack();
 			interpreter->PushStack(i + popped * 10);
@@ -128,13 +139,13 @@ void Emmental::GenerateDefaultSymbols()
 	SymbolMap['.'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol = interpreter->PopStack();
-		interpreter->OutputStream->put(symbol);
+		interpreter->OutputStream << symbol;
 	});
 	// Get input symbol and push to stack
 	SymbolMap[','] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
 	{
 		SymbolType symbol;
-		interpreter->InputStream->get(symbol);
+		interpreter->InputStream >> symbol;
 		interpreter->PushStack(symbol);
 	});
 	// For convenience, ';' puts ';' on the stack.
