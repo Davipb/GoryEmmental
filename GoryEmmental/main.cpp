@@ -1,9 +1,49 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "Emmental.h"
 #include "InterpretedDefinition.h"
 #include "InteractiveInterpreter.h"
 #include "tclap\CmdLine.h"
+
+int InterpretFile(std::string filename, bool debug)
+{
+	Emmental interpreter(std::cin, std::cout, std::cerr);
+	std::basic_ifstream<SymbolT> file(filename, std::ios_base::in);
+
+	while (!file.eof())
+	{
+		SymbolT symbol;
+		file >> symbol;
+		interpreter.Interpret(symbol);
+
+		if (debug)
+		{
+			std::cout << std::endl;
+			std::cout << "Symbol: " << std::to_string(symbol) << " '" << symbol << "'" << std::endl;
+			std::cout << "Stack: ";
+			std::stack<SymbolT> stack = interpreter.GetStack();
+			while (!stack.empty())
+			{
+				std::cout << std::to_string(stack.top()) << " '" << stack.top() << "'; ";
+				stack.pop();
+			}
+			std::cout << std::endl;
+
+			std::cout << "Queue: ";
+			std::queue<SymbolT> queue = interpreter.GetQueue();
+			while (!queue.empty())
+			{
+				std::cout << std::to_string(queue.front()) << " '" << queue.front() << "'; ";
+				queue.pop();
+			}
+			std::cout << std::endl;
+		}
+	}
+
+	file.close();
+	return EXIT_SUCCESS;
+}
 
 int main(int argc, char** argv)
 {
@@ -19,16 +59,17 @@ int main(int argc, char** argv)
 		cmd.xorAdd(interactiveModeArg, inputFileArg);
 
 		cmd.parse(argc, argv);
+		bool debug = debugModeArg.getValue();
 
 		if (interactiveModeArg.isSet())
 		{
 			Emmental interpreter(std::cin, std::cout, std::cerr);
 			InteractiveInterpreter interactive(&interpreter);
-			interactive.DebugMode = debugModeArg.getValue();
+			interactive.DebugMode = debug;
 			return interactive.RunLoop();
 		}
 
-		return EXIT_SUCCESS;
+		return InterpretFile(inputFileArg.getValue(), debug);
 	}
 	catch (TCLAP::ArgException& e)
 	{
