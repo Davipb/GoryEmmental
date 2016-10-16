@@ -110,6 +110,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Emmental.h" />
+    <ClInclude Include="EmmentalDefinition.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Emmental.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
