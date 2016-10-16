@@ -30,12 +30,16 @@ public:
 	// Puts an item at the back of the queue.
 	void Enqueue(SymbolType item);
 
-	// Gets the current definition of a symbol.
-	class EmmentalDefinition* GetDefinition(SymbolType symbol);
 	// Makes a copy of all definitions currently in effect.
 	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> CopyDefinitions();
 
+	// Executes a symbol in the current interpreter state
 	void Interpret(SymbolType symbol);
+	// Executes a symbol using the selected interpreter state
+	void Interpret(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state);
+
+	// Redefines a symbol
+	void Redefine(SymbolType symbol, std::shared_ptr<EmmentalDefinition> definition);
 
 private:
 	std::stack<SymbolType> ProgramStack;
@@ -44,4 +48,6 @@ private:
 	std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> SymbolMap;
 
 	void GenerateDefaultSymbols();
+
+	EmmentalDefinition* GetDefinition(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state);
 };

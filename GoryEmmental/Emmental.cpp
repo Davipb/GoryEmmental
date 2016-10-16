@@ -1,5 +1,6 @@
 #include "Emmental.h"
 #include "NativeDefinition.h"
+#include "InterpretedDefinition.h"
 
 Emmental::Emmental(std::basic_istream<SymbolType>* const inputStream, std::basic_ostream<SymbolType>* const outputStream)
 	: InputStream(inputStream), OutputStream(outputStream)
@@ -47,19 +48,24 @@ void Emmental::Enqueue(SymbolType item)
 	ProgramQueue.push(item);
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolType symbol)
-{
-	auto result = SymbolMap.find(symbol);
-
-	if (result == SymbolMap.end())
-		return nullptr;
-
-	return result->second.get();
-}
-
 std::map<SymbolType, std::shared_ptr<EmmentalDefinition>> Emmental::CopyDefinitions()
 {
 	return SymbolMap;
+}
+
+void Emmental::Interpret(SymbolType symbol) { Interpret(symbol, SymbolMap); }
+
+void Emmental::Interpret(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state)
+{
+	EmmentalDefinition* definition = GetDefinition(symbol, state);
+
+	if (definition)
+		definition->Execute(this);
+}
+
+void Emmental::Redefine(SymbolType symbol, std::shared_ptr<EmmentalDefinition> definition)
+{
+	SymbolMap[symbol] = definition;
 }
 
 void Emmental::GenerateDefaultSymbols()
@@ -133,6 +139,34 @@ void Emmental::GenerateDefaultSymbols()
 	});
 	// For convenience, ';' puts ';' on the stack.
 	SymbolMap[';'] = std::make_shared<NativeDefinition>([](Emmental* interpreter) { interpreter->PushStack(';'); });
+	// Eval: Interpret the top stack symbol
+	SymbolMap['?'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	{
+		SymbolType symbol = interpreter->PopStack();
+		interpreter->Interpret(symbol);
+	});
+	
+	// This is the main command of the Emmental: Supplant.
+	// Pop a symbol and a program from the stack. Redefine the symbol as the popped program.
+	SymbolMap['!'] = std::make_shared<NativeDefinition>([](Emmental* interpreter)
+	{
+		SymbolType symbol = interpreter->PopStack();
+		std::vector<SymbolType> program = interpreter->PopProgram();
 
-	// TODO: '!', '?'
+		interpreter->Redefine(
+			symbol, 
+			std::make_shared<InterpretedDefinition>(program, interpreter->CopyDefinitions())
+		);
+
+	});
+}
+
+EmmentalDefinition* Emmental::GetDefinition(SymbolType symbol, const std::map<SymbolType, std::shared_ptr<EmmentalDefinition>>& state)
+{
+	auto result = state.find(symbol);
+
+	if (result == state.end())
+		return nullptr;
+
+	return result->second.get();
 }
