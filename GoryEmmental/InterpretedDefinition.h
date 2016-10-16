@@ -12,6 +12,9 @@ public:
 	InterpretedDefinition(const ProgramT& program, const SymbolMapT& state);
 	void Execute(Emmental* interpreter, std::size_t recursionLevel) override;
 
+	ProgramT GetProgram() const;
+	SymbolMapT GetDefinitions() const;
+
 private:
 	ProgramT Program;
 	SymbolMapT CapturedState;

@@ -16,7 +16,6 @@ public:
 	std::ostream& ErrorStream;
 
 	// Creates a new Emmental interpreter with a specified IO Streams
-	// Note: The interpreter does not take ownership of the stream. It must be deleted manually.
 	Emmental(std::istream& inputStream, std::ostream& outputStream, std::ostream& errorStream);
 
 	// Gets a copy of the current stack
@@ -35,6 +34,11 @@ public:
 	// Puts an item at the back of the queue.
 	void Enqueue(SymbolT item);
 
+	// Gets the current definition of a symbol. Returns nullptr if not defined.
+	EmmentalDefinition* GetDefinition(SymbolT symbol);
+
+	// Makes a copy of all current definitions
+	SymbolMapT CopyDefinitions();
 	// Makes a copy of all current definitions used in a program.
 	SymbolMapT CopyDefinitions(ProgramT program);
 
@@ -49,6 +53,9 @@ public:
 
 	// Redefines a symbol
 	void Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition);
+
+	// Restores the default definitions for all symbols
+	void Reset();
 
 private:
 	std::stack<SymbolT> ProgramStack;

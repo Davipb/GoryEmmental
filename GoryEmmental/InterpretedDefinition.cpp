@@ -13,3 +13,7 @@ void InterpretedDefinition::Execute(Emmental* interpreter, std::size_t recursion
 		interpreter->Interpret(symbol, CapturedState, recursionLevel);
 	}
 }
+
+ProgramT InterpretedDefinition::GetProgram() const { return Program; }
+
+SymbolMapT InterpretedDefinition::GetDefinitions() const { return CapturedState; }

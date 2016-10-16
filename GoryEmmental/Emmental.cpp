@@ -98,6 +98,10 @@ void Emmental::Enqueue(SymbolT item)
 	ProgramQueue.push(item);
 }
 
+EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol) { return GetDefinition(symbol, SymbolMap); }
+
+SymbolMapT Emmental::CopyDefinitions() { return SymbolMap; }
+
 SymbolMapT Emmental::CopyDefinitions(ProgramT program)
 {
 	if (program.empty())
@@ -143,6 +147,12 @@ void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> defi
 		SymbolMap[symbol] = definition;
 	else
 		ErrorStream << "Error: Tried to redefine symbol '" << symbol << "' with a null definition." << std::endl;
+}
+
+void Emmental::Reset()
+{
+	SymbolMap.clear();
+	GenerateDefaultSymbols();
 }
 
 void Emmental::GenerateDefaultSymbols()
