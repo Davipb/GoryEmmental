@@ -19,7 +19,7 @@ public:
 	Emmental(std::istream& inputStream, std::ostream& outputStream, std::ostream& errorStream);
 
 	// Gets a copy of the current stack
-	std::stack<SymbolT> GetStack();
+	std::stack<SymbolT> GetStack() const;
 	// Gets the item on top of the stack and removes it from the stack.
 	SymbolT PopSymbol();
 	// Reads symbols off the stack until ';' is encountered, and returns the symbols in reverse popping order.
@@ -30,7 +30,7 @@ public:
 	void ClearStack();
 
 	// Gets a copy of the current queue
-	std::queue<SymbolT> GetQueue();
+	std::queue<SymbolT> GetQueue() const;
 	// Gets the item at the top of the queue and removes it from the queue.
 	SymbolT Dequeue();
 	// Puts an item at the back of the queue.
@@ -39,11 +39,11 @@ public:
 	void ClearQueue();
 
 	// Gets the current definition of a symbol. Returns nullptr if not defined.
-	EmmentalDefinition* GetDefinition(SymbolT symbol);
+	EmmentalDefinition* GetDefinition(SymbolT symbol) const;
 	// Makes a copy of all current definitions
-	SymbolMapT CopyDefinitions();
+	SymbolMapT CopyDefinitions() const;
 	// Makes a copy of all current definitions used in a program.
-	SymbolMapT CopyDefinitions(ProgramT program);
+	SymbolMapT CopyDefinitions(ProgramT program) const;
 	// Restores all definitions to their default values
 	void ResetDefinitions();
 
@@ -70,5 +70,5 @@ private:
 
 	void GenerateDefaultSymbols();
 
-	EmmentalDefinition* GetDefinition(SymbolT symbol, const SymbolMapT& state);
+	EmmentalDefinition* GetDefinition(SymbolT symbol, const SymbolMapT& state) const;
 };

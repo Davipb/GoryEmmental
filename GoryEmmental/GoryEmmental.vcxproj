@@ -135,6 +135,7 @@
     <ClInclude Include="InteractiveInterpreter.h" />
     <ClInclude Include="InterpretedDefinition.h" />
     <ClInclude Include="NativeDefinition.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Emmental.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="InterpretedDefinition.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NativeDefinition.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

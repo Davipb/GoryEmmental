@@ -34,8 +34,5 @@ private:
 	std::list<InteractiveCommand> Commands;
 	void GenerateCommands();
 	bool ParseCommand(std::string input);
-
-	void DisplayMap(const SymbolMapT& map, std::ostream& output);
-
 };
 

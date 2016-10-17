@@ -1,6 +1,7 @@
+#include <iomanip>
 #include "InteractiveInterpreter.h"
 #include "InterpretedDefinition.h"
-#include <iomanip>
+#include "Util.h"
 
 InteractiveInterpreter::InteractiveInterpreter(Emmental* const interpreter)
 	: Interpreter(interpreter)
@@ -37,10 +38,7 @@ int InteractiveInterpreter::RunLoop()
 
 		if (DebugMode)
 		{
-			auto command = std::find_if(Commands.begin(), Commands.end(), [](InteractiveCommand x) { return x.GetName() == "memory"; });
-
-			if (command != Commands.end())
-				command->Execute(Interpreter, std::string());
+			Util::DescribeMemory(*Interpreter, Interpreter->OutputStream);
 		}
 	}
 }
@@ -86,23 +84,8 @@ void InteractiveInterpreter::GenerateCommands()
 
 	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [&](Emmental* interpreter, std::string)
 	{
-		Interpreter->OutputStream << "Stack: ";
-		std::stack<SymbolT> stack = Interpreter->GetStack();
-		while (!stack.empty())
-		{
-			Interpreter->OutputStream << std::to_string(stack.top()) << " '" << stack.top() << "'; ";
-			stack.pop();
-		}
-		Interpreter->OutputStream << std::endl;
-
-		Interpreter->OutputStream << "Queue: ";
-		std::queue<SymbolT> queue = Interpreter->GetQueue();
-		while (!queue.empty())
-		{
-			Interpreter->OutputStream << std::to_string(queue.front()) << " '" << queue.front() << "'; ";
-			queue.pop();
-		}
-		Interpreter->OutputStream << std::endl;
+		Util::DescribeMemory(*interpreter, interpreter->OutputStream);
+		interpreter->OutputStream << std::endl;
 	}));
 
 	AddCommand(InteractiveCommand("defs", 
@@ -112,7 +95,8 @@ void InteractiveInterpreter::GenerateCommands()
 		if (arg.empty())
 		{
 			interpreter->OutputStream << "Current interpreter definitions: " << std::endl;
-			DisplayMap(interpreter->CopyDefinitions(), interpreter->OutputStream);
+			Util::DescribeDefinitions(interpreter->CopyDefinitions(), interpreter->OutputStream);
+			interpreter->OutputStream << std::endl;
 		}
 		else
 		{
@@ -133,24 +117,8 @@ void InteractiveInterpreter::GenerateCommands()
 				return;
 			}
 
-			interpreter->OutputStream << std::setw(3) << std::to_string(symbol) << " '" << symbol << "' -> ";
-
-			EmmentalDefinition* definition = interpreter->GetDefinition(symbol);
-			InterpretedDefinition* interpreted = dynamic_cast<InterpretedDefinition*>(definition);
-
-			if (interpreted == nullptr)
-			{
-				interpreter->OutputStream << "(Native)" << std::endl;
-				return;
-			}
-			
-			for (auto&& x : interpreted->GetProgram())
-				interpreter->OutputStream << x;
-
+			Util::DescribeDefinition(symbol, interpreter->CopyDefinitions(), true, interpreter->OutputStream);
 			interpreter->OutputStream << std::endl;
-			interpreter->OutputStream << "Captured state: " << std::endl;
-
-			DisplayMap(interpreted->GetDefinitions(), interpreter->OutputStream);			
 		}
 	}));
 
@@ -196,27 +164,4 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 
 	Interpreter->OutputStream << "Unknown command. Use __help for a list of commands." << std::endl;
 	return true;
-}
-
-void InteractiveInterpreter::DisplayMap(const SymbolMapT& map, std::ostream& output)
-{
-	for (auto&& pair : map)
-	{
-		output << std::setw(3) << std::to_string(pair.first) << " '" << pair.first << "'";
-		output << " -> ";
-
-		InterpretedDefinition* interpreted = dynamic_cast<InterpretedDefinition*>(pair.second.get());
-
-		if (interpreted)
-		{
-			for (auto&& x : interpreted->GetProgram())
-				output << x;
-		}
-		else
-		{
-			output << "(Native)";
-		}
-
-		output << std::endl;
-	}
 }

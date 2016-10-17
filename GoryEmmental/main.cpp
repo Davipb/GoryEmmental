@@ -4,6 +4,7 @@
 #include "Emmental.h"
 #include "InterpretedDefinition.h"
 #include "InteractiveInterpreter.h"
+#include "Util.h"
 #include "tclap\CmdLine.h"
 
 int InterpretFile(std::string filename, bool debug)
@@ -20,24 +21,12 @@ int InterpretFile(std::string filename, bool debug)
 		if (debug)
 		{
 			std::cout << std::endl;
-			std::cout << "Symbol: " << std::to_string(symbol) << " '" << symbol << "'" << std::endl;
-			std::cout << "Stack: ";
-			std::stack<SymbolT> stack = interpreter.GetStack();
-			while (!stack.empty())
-			{
-				std::cout << std::to_string(stack.top()) << " '" << stack.top() << "'; ";
-				stack.pop();
-			}
+
+			std::cout << "Symbol: ";
+			Util::DescribeSymbol(symbol, std::cout);
 			std::cout << std::endl;
 
-			std::cout << "Queue: ";
-			std::queue<SymbolT> queue = interpreter.GetQueue();
-			while (!queue.empty())
-			{
-				std::cout << std::to_string(queue.front()) << " '" << queue.front() << "'; ";
-				queue.pop();
-			}
-			std::cout << std::endl;
+			Util::DescribeMemory(interpreter, std::cout);
 		}
 	}
 

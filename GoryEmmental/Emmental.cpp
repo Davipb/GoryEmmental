@@ -8,7 +8,7 @@ Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream, std::o
 	GenerateDefaultSymbols();
 }
 
-std::stack<SymbolT> Emmental::GetStack()
+std::stack<SymbolT> Emmental::GetStack() const
 {
 	return ProgramStack;
 }
@@ -74,7 +74,7 @@ void Emmental::ClearStack()
 		ProgramStack.pop();
 }
 
-std::queue<SymbolT> Emmental::GetQueue()
+std::queue<SymbolT> Emmental::GetQueue() const
 {
 	return ProgramQueue;
 }
@@ -110,11 +110,11 @@ void Emmental::ClearQueue()
 		ProgramQueue.pop();
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol) { return GetDefinition(symbol, SymbolMap); }
+EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol) const { return GetDefinition(symbol, SymbolMap); }
 
-SymbolMapT Emmental::CopyDefinitions() { return SymbolMap; }
+SymbolMapT Emmental::CopyDefinitions() const { return SymbolMap; }
 
-SymbolMapT Emmental::CopyDefinitions(ProgramT program)
+SymbolMapT Emmental::CopyDefinitions(ProgramT program) const
 {
 	if (program.empty())
 		return SymbolMapT();
@@ -273,7 +273,7 @@ void Emmental::GenerateDefaultSymbols()
 	});
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol, const SymbolMapT& state)
+EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol, const SymbolMapT& state) const
 {
 	auto result = state.find(symbol);
 
