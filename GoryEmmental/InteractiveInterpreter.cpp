@@ -110,12 +110,16 @@ void InteractiveInterpreter::GenerateCommands()
 		}
 		catch (std::invalid_argument)
 		{
+			Util::Colorize(Util::ConsoleColor::Red, interpreter.OutputStream);
 			interpreter.OutputStream << "Invalid symbol number." << std::endl;
+			Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
 			return;
 		}
 		catch (std::out_of_range)
 		{
+			Util::Colorize(Util::ConsoleColor::Red, interpreter.OutputStream);
 			interpreter.OutputStream << "Symbol value out of range." << std::endl;
+			Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
 			return;
 		}
 
@@ -190,12 +194,16 @@ void InteractiveInterpreter::GenerateCommands()
 			}
 			catch (std::invalid_argument)
 			{
+				Util::Colorize(Util::ConsoleColor::Red, interpreter.OutputStream);
 				interpreter.OutputStream << "Invalid symbol number." << std::endl;
+				Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
 				return;
 			}
 			catch (std::out_of_range)
 			{
+				Util::Colorize(Util::ConsoleColor::Red, interpreter.OutputStream);
 				interpreter.OutputStream << "Symbol value out of range." << std::endl;
+				Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
 				return;
 			}
 
@@ -252,7 +260,7 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 	std::string commandName = command;
 	std::string argument;
 	auto spaceLocation = commandName.find(' ');
-	if (spaceLocation != commandName.length())
+	if (spaceLocation < command.length())
 	{
 		commandName = command.substr(0, spaceLocation);
 		argument = command.substr(spaceLocation + 1, command.length() - spaceLocation - 1);
