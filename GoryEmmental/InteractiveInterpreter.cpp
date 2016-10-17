@@ -249,22 +249,26 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 		return true;
 	}
 
+	std::string commandName = command;
+	std::string argument;
+	auto spaceLocation = commandName.find(' ');
+	if (spaceLocation != commandName.length())
+	{
+		commandName = command.substr(0, spaceLocation);
+		argument = command.substr(spaceLocation + 1, command.length() - spaceLocation - 1);
+	}
+
 	for (auto& x : Commands)
 	{
-		if (command.find(x.GetName()) == 0)
+		if (x.GetName() == commandName)
 		{
-			std::string argument = command.substr(x.GetName().size(), command.size() - x.GetName().size());
-			// Trim initial space from argument to allow "__command arg" instead of just "__commandarg"
-			if (argument.length() > 0 && argument[0] == ' ')
-				argument = argument.substr(1, argument.length() - 1);
-
 			x.Execute(Interpreter, argument);
 			return true;
 		}
 	}
 		
 	Util::Colorize(Util::ConsoleColor::Red, Interpreter.OutputStream);
-	Interpreter.OutputStream << "Unknown command. Use __help for a list of commands." << std::endl;
+	Interpreter.OutputStream << "Unknown command '" << commandName << "'. Use __help for a list of commands." << std::endl;
 	Util::Colorize(Util::ConsoleColor::Default, Interpreter.OutputStream);
 
 	return true;
