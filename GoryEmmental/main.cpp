@@ -13,6 +13,12 @@ int InterpretFile(std::string filename)
 	Emmental interpreter(std::cin, std::cout, std::cerr);
 	std::basic_ifstream<SymbolT> file(filename, std::ios_base::in);
 
+	if (file.fail() || file.bad())
+	{
+		std::cerr << "Couldn't open file.";
+		return EXIT_FAILURE;
+	}
+
 	while (!file.eof())
 	{
 		SymbolT symbol;
@@ -22,12 +28,11 @@ int InterpretFile(std::string filename)
 		if (Globals::DebugMode)
 		{
 			std::cout << std::endl;
-
-			std::cout << "Symbol: ";
+			std::cout << "Interpreted Symbol: ";
 			Util::DescribeSymbol(symbol, std::cout);
 			std::cout << std::endl;
-
 			Util::DescribeMemory(interpreter, std::cout);
+			std::cout << std::endl;
 		}
 	}
 
