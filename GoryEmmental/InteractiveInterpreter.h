@@ -23,6 +23,8 @@ public:
 	};
 
 public:
+	bool EnableCommands = true;
+
 	explicit InteractiveInterpreter(Emmental& interpreter);
 	int RunLoop();
 	void AddCommand(const InteractiveCommand& command);

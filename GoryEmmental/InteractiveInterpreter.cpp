@@ -25,12 +25,15 @@ int InteractiveInterpreter::RunLoop()
 		std::getline(Interpreter.InputStream, input);
 		Interpreter.OutputStream << std::endl;
 
-		// Special command to exit the loop
-		if (input.find("__exit") == 0)
-			return EXIT_SUCCESS;
-		
-		if (ParseCommand(input))
-			continue;
+		if (EnableCommands)
+		{
+			// Special command to exit the loop
+			if (input.find("__exit") == 0)
+				return EXIT_SUCCESS;
+
+			if (ParseCommand(input))
+				continue;
+		}
 
 		for (auto&& x : input)
 		{
@@ -54,6 +57,25 @@ void InteractiveInterpreter::GenerateCommands()
 	AddCommand(InteractiveCommand("help", "Shows this list.", nullptr));
 
 	// Normal commands here
+	AddCommand(InteractiveCommand("disablecommands", "Disables all commands, interpreting all input as Emmental code.", [&](Emmental& interpreter, std::string)
+	{
+		Util::Colorize(Util::ConsoleColor::BrightYellow, interpreter.OutputStream);
+		interpreter.OutputStream << "WARNING! ";
+		Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
+		interpreter.OutputStream << "All commands will be disabled, including __exit. Do you want to continue? (Y/N)";
+
+		std::string answer;
+		std::getline(Interpreter.InputStream, answer);
+		if (answer == "y" || answer == "Y")
+		{
+			EnableCommands = false;
+			interpreter.OutputStream << "All commands disabled." << std::endl;
+		}
+		else
+		{
+			interpreter.OutputStream << "Operation cancelled. " << std::endl;
+		}
+	}));
 	AddCommand(InteractiveCommand("reset", "Resets the interpreter back to its original state.", [](Emmental& interpreter, std::string)
 	{
 		interpreter.Reset();
@@ -76,6 +98,32 @@ void InteractiveInterpreter::GenerateCommands()
 	{
 		interpreter.ResetDefinitions();
 		interpreter.OutputStream << "Symbol definitions reset to original native definitions." << std::endl;
+	}));
+
+	AddCommand(InteractiveCommand("undef", "Undefines a symbol. Pass the symbol number as an argument.", [](Emmental& interpreter, std::string arg)
+	{
+		SymbolT symbol;
+
+		try
+		{
+			symbol = std::stoi(arg);
+		}
+		catch (std::invalid_argument)
+		{
+			interpreter.OutputStream << "Invalid symbol number." << std::endl;
+			return;
+		}
+		catch (std::out_of_range)
+		{
+			interpreter.OutputStream << "Symbol value out of range." << std::endl;
+			return;
+		}
+
+		interpreter.Undefine(symbol);
+		interpreter.OutputStream << "Undefined symbol ";
+		Util::DescribeSymbol(symbol, interpreter.OutputStream);
+		interpreter.OutputStream << "." << std::endl;
+
 	}));
 
 	AddCommand(InteractiveCommand("debug", "Toggles debug mode on/off", [](Emmental& interpreter, std::string)
@@ -142,7 +190,7 @@ void InteractiveInterpreter::GenerateCommands()
 			}
 			catch (std::invalid_argument)
 			{
-				interpreter.OutputStream << "Invalid symbol" << std::endl;
+				interpreter.OutputStream << "Invalid symbol number." << std::endl;
 				return;
 			}
 			catch (std::out_of_range)
