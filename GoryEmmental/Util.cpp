@@ -91,7 +91,7 @@ void Util::DescribeMemory(const Emmental& interpreter, std::ostream& output)
 	std::queue<SymbolT> queue = interpreter.GetQueue();
 	while (!queue.empty())
 	{
-		DescribeSymbol(stack.top(), output);
+		DescribeSymbol(queue.front(), output);
 		output << ", ";
 		queue.pop();
 	}

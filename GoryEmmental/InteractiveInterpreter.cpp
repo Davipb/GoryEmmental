@@ -44,6 +44,7 @@ int InteractiveInterpreter::RunLoop()
 		if (Globals::DebugMode)
 		{
 			Util::DescribeMemory(Interpreter, Interpreter.OutputStream);
+			Interpreter.OutputStream << std::endl;
 		}
 	}
 }
