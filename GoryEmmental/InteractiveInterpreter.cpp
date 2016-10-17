@@ -130,23 +130,49 @@ void InteractiveInterpreter::GenerateCommands()
 
 	}));
 
-	AddCommand(InteractiveCommand("debug", "Toggles debug mode on/off", [](Emmental& interpreter, std::string)
-	{
-		Globals::DebugMode = !Globals::DebugMode;
-		interpreter.OutputStream << "Debug mode is now " << (Globals::DebugMode ? "on" : "off") << "." << std::endl;
-	}));
+	AddCommand(InteractiveCommand("toggle", 
+		"Toggles runtime options on/off. Available options: debug, color, optimize, nowhitespace, quiet, lenient", 
+		[](Emmental& interpreter, std::string arg)
+		{
+			if (arg == "debug")
+			{
+				Globals::DebugMode = !Globals::DebugMode;
+				interpreter.OutputStream << "Debug mode is now " << (Globals::DebugMode ? "on" : "off") << "." << std::endl;
+			}
+			else if (arg == "color")
+			{
+				Globals::UseVirtualConsole = !Globals::UseVirtualConsole;
+				interpreter.OutputStream << "Virtual Console Colors are now " << (Globals::UseVirtualConsole ? "on" : "off") << "." << std::endl;
+			}
+			else if (arg == "optimize")
+			{
+				Globals::OptimizeProgram = !Globals::OptimizeProgram;
+				interpreter.OutputStream << "Optimization is now " << (Globals::OptimizeProgram ? "on" : "off") << "." << std::endl;
+			}
+			else if (arg == "nowhitespace")
+			{
+				Globals::IgnoreWhitespace = !Globals::IgnoreWhitespace;
+				interpreter.OutputStream << "Whitespace is now " << (Globals::IgnoreWhitespace ? "ignored" : "interpreted normally") << "." << std::endl;
+			}
+			else if (arg == "quiet")
+			{
+				Globals::QuietMode = !Globals::QuietMode;
+				interpreter.OutputStream << "Quiet Mode is now " << (Globals::QuietMode ? "on" : "off") << "." << std::endl;
+			}
+			else if (arg == "lenient")
+			{
+				Globals::LenientMode = !Globals::LenientMode;
+				interpreter.OutputStream << "Errors are now" << (Globals::LenientMode ? " considered warnings" : " fatal") << "." << std::endl;
+			}
+			else
+			{
+				Util::Colorize(Util::ConsoleColor::Red, interpreter.OutputStream);
+				interpreter.OutputStream << "Unknown runtime option '" << arg << "'. Available options: " << std::endl;
+				Util::Colorize(Util::ConsoleColor::Default, interpreter.OutputStream);
+				interpreter.OutputStream << "debug, color, optimize, nowhitespace, quiet, lenient" << std::endl;
+			}
 
-	AddCommand(InteractiveCommand("color", "Toggles Virtual Console coloring on/off", [](Emmental& interpreter, std::string)
-	{
-		Globals::UseVirtualConsole = !Globals::UseVirtualConsole;
-		interpreter.OutputStream << "Virtual Console coloring is now " << (Globals::UseVirtualConsole ? "on" : "off") << "." << std::endl;
-	}));
-
-	AddCommand(InteractiveCommand("optimize", "Toggles program optimization on/off", [](Emmental& interpreter, std::string)
-	{
-		Globals::OptimizeProgram = !Globals::OptimizeProgram;
-		interpreter.OutputStream << "Optimization is now " << (Globals::OptimizeProgram ? "on" : "off") << "." << std::endl;
-	}));
+		}));
 
 	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [](Emmental& interpreter, std::string)
 	{
@@ -231,6 +257,9 @@ void InteractiveInterpreter::GenerateCommands()
 		interpreter.OutputStream << "Debug Mode: " << (Globals::DebugMode ? "On" : "Off") << std::endl;
 		interpreter.OutputStream << "Colors: " << (Globals::UseVirtualConsole ? "On" : "Off") << std::endl;
 		interpreter.OutputStream << "Optimization: " << (Globals::OptimizeProgram ? "On" : "Off") << std::endl;
+		interpreter.OutputStream << "Ignore Whitespace: " << (Globals::IgnoreWhitespace ? "On" : "Off") << std::endl;
+		interpreter.OutputStream << "Quiet Mode: " << (Globals::QuietMode ? "On" : "Off") << std::endl;
+		interpreter.OutputStream << "Lenient Mode: " << (Globals::LenientMode ? "On" : "Off") << std::endl;
 
 	}));
 }

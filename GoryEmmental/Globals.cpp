@@ -7,6 +7,9 @@
 bool Globals::DebugMode = false;
 bool Globals::UseVirtualConsole = false;
 bool Globals::OptimizeProgram = false;
+bool Globals::IgnoreWhitespace = false;
+bool Globals::QuietMode = false;
+bool Globals::LenientMode = false;
 
 void Globals::Initialize()
 {

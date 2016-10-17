@@ -136,6 +136,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="Emmental.h" />
     <ClInclude Include="EmmentalDefinition.h" />
+    <ClInclude Include="EmmentalException.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="InteractiveInterpreter.h" />
     <ClInclude Include="InterpretedDefinition.h" />

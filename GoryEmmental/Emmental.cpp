@@ -3,6 +3,7 @@
 #include "InterpretedDefinition.h"
 #include "Util.h"
 #include "Globals.h"
+#include "EmmentalException.h"
 
 static const Util::ConsoleColor ErrorColor = Util::ConsoleColor::BrightRed;
 static const Util::ConsoleColor WarningColor = Util::ConsoleColor::BrightYellow;
@@ -22,11 +23,23 @@ SymbolT Emmental::PopSymbol()
 {
 	if (ProgramStack.empty())
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
 
-		ErrorStream << "Tried popping symbol from empty stack. Returning default value." << std::endl;
+			ErrorStream << "Tried popping symbol from empty stack.";
+
+			if (Globals::LenientMode)
+				ErrorStream << " Returning default value.";
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Tried popping symbol from empty stack.");
+
 		return SymbolT();
 	}
 
@@ -40,10 +53,22 @@ ProgramT Emmental::PopProgram()
 {
 	if (ProgramStack.empty())
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried popping program from empty stack. Returning default program." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Tried popping program from empty stack.";
+
+				if (Globals::LenientMode)
+					ErrorStream << " Returning default program.";
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Tried popping program from empty stack.");
+
 		return ProgramT();
 	}
 
@@ -56,12 +81,24 @@ ProgramT Emmental::PopProgram()
 
 		if (ProgramStack.empty())
 		{
-			Util::Colorize(ErrorColor, ErrorStream);
-			ErrorStream << "Error: ";
-			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-			ErrorStream << "Stack ran out before ";
-			Util::DescribeSymbol(';', ErrorStream);
-			ErrorStream << " was found to terminate a program. Returning incomplete program." << std::endl;
+			if (!Globals::QuietMode)
+			{
+				Util::Colorize(ErrorColor, ErrorStream);
+				ErrorStream << "Error: ";
+				Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+				ErrorStream << "Stack ran out before ";
+				Util::DescribeSymbol(';', ErrorStream);
+				ErrorStream << " was found to terminate a program.";
+
+				if (Globals::LenientMode)
+					ErrorStream << " Returning incomplete program.";
+
+				ErrorStream << std::endl;
+			}
+
+			if (!Globals::LenientMode)
+				throw EmmentalException("Stack ran out before ';' was found to terminate a program.");
+
 			break;
 		}
 		else
@@ -78,12 +115,24 @@ void Emmental::Push(SymbolT item)
 {
 	if (ProgramStack.size() >= EMMENTAL_MAX_STACK_SIZE)
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried to push symbol ";
-		Util::DescribeSymbol(item, ErrorStream);
-		ErrorStream << " to full stack. Ignoring." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Tried to push symbol ";
+			Util::DescribeSymbol(item, ErrorStream);
+			ErrorStream << " to full stack.";
+
+			if (Globals::LenientMode)
+				ErrorStream << " Ignoring.";
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Stack full.");
+
 		return;
 	}
 
@@ -105,10 +154,23 @@ SymbolT Emmental::Dequeue()
 {
 	if (ProgramQueue.empty())
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried dequeuing symbol from empty queue. Returning default value." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+
+			ErrorStream << "Tried dequeuing symbol from empty queue.";
+
+			if (Globals::LenientMode)
+				ErrorStream << " Returning default value.";
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Tried dequeuing symbol from empty queue.");
+
 		return SymbolT();
 	}
 
@@ -122,12 +184,24 @@ void Emmental::Enqueue(SymbolT item)
 {
 	if (ProgramQueue.size() >= EMMENTAL_MAX_QUEUE_SIZE)
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried to enqueue symbol ";
-		Util::DescribeSymbol(item, ErrorStream);
-		ErrorStream << " to full queue. Ignoring." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Tried to enqueue symbol ";
+			Util::DescribeSymbol(item, ErrorStream);
+			ErrorStream << " to full queue.";
+
+			if (Globals::LenientMode)
+				ErrorStream << " Ignoring.";
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Queue full.");
+
 		return;
 	}
 
@@ -177,12 +251,26 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 {
 	if (recursionLevel >= EMMENTAL_MAX_RECURSION_LEVEL)
 	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Recursion level too high. Ignoring symbol ";
-		Util::DescribeSymbol(symbol, ErrorStream);
-		ErrorStream << "." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Recursion level too high.";
+
+			if (Globals::LenientMode)
+			{
+				ErrorStream << " Ignoring symbol ";
+				Util::DescribeSymbol(symbol, ErrorStream);
+				ErrorStream << "." << std::endl;
+			}
+
+			ErrorStream << std::endl;
+		}
+
+		if (!Globals::LenientMode)
+			throw EmmentalException("Recursion level too high.");
+
 		return;
 	}
 
@@ -194,12 +282,15 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 	}
 	else
 	{
-		Util::Colorize(WarningColor, ErrorStream);
-		ErrorStream << "Warning: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried to interpret undefined symbol ";
-		Util::DescribeSymbol(symbol, ErrorStream);
-		ErrorStream << ". Ignoring symbol." << std::endl;
+		if (!Globals::QuietMode)
+		{
+			Util::Colorize(WarningColor, ErrorStream);
+			ErrorStream << "Warning: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Tried to interpret undefined symbol ";
+			Util::DescribeSymbol(symbol, ErrorStream);
+			ErrorStream << ". Ignoring symbol." << std::endl;
+		}
 	}
 }
 
