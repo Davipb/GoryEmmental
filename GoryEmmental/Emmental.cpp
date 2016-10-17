@@ -363,12 +363,12 @@ void Emmental::GenerateDefaultSymbols()
 		interpreter->Push(symbol);
 	});
 	// Dequeue to stack
-	SymbolMap['V'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
+	SymbolMap['v'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->Dequeue();
 		interpreter->Push(symbol);
 	});
-	// Duplicate front queue symbol
+	// Duplicate top stack symbol
 	SymbolMap[':'] = std::make_shared<NativeDefinition>([](Emmental* interpreter, std::size_t)
 	{
 		SymbolT symbol = interpreter->PopSymbol();
