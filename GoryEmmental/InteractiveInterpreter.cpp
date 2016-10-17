@@ -2,6 +2,7 @@
 #include "InteractiveInterpreter.h"
 #include "InterpretedDefinition.h"
 #include "Util.h"
+#include "Globals.h"
 
 InteractiveInterpreter::InteractiveInterpreter(Emmental* const interpreter)
 	: Interpreter(interpreter)
@@ -36,7 +37,7 @@ int InteractiveInterpreter::RunLoop()
 			Interpreter->Interpret(symbol);
 		}
 
-		if (DebugMode)
+		if (Globals::DebugMode)
 		{
 			Util::DescribeMemory(*Interpreter, Interpreter->OutputStream);
 		}
@@ -76,10 +77,10 @@ void InteractiveInterpreter::GenerateCommands()
 		interpreter->OutputStream << "Symbol definitions reset to original native definitions." << std::endl;
 	}));
 
-	AddCommand(InteractiveCommand("debug", "Toggles debug mode on/off", [&](Emmental* interpreter, std::string)
+	AddCommand(InteractiveCommand("debug", "Toggles debug mode on/off", [](Emmental* interpreter, std::string)
 	{
-		DebugMode = !DebugMode;
-		interpreter->OutputStream << "Debug mode is now " << (DebugMode ? "on" : "off") << "." << std::endl;
+		Globals::DebugMode = !Globals::DebugMode;
+		interpreter->OutputStream << "Debug mode is now " << (Globals::DebugMode ? "on" : "off") << "." << std::endl;
 	}));
 
 	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [](Emmental* interpreter, std::string)

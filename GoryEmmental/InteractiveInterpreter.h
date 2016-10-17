@@ -23,8 +23,6 @@ public:
 	};
 
 public:
-	bool DebugMode = false;
-
 	InteractiveInterpreter(Emmental* const interpreter);
 	int RunLoop();
 	void AddCommand(const InteractiveCommand& command);

@@ -3,6 +3,9 @@
 #include "InterpretedDefinition.h"
 #include "Util.h"
 
+static const Util::ConsoleColor ErrorColor = Util::ConsoleColor::BrightRed;
+static const Util::ConsoleColor WarningColor = Util::ConsoleColor::BrightYellow;
+
 Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream, std::ostream& errorStream)
 	: InputStream(inputStream), OutputStream(outputStream), ErrorStream(errorStream)
 {
@@ -18,7 +21,11 @@ SymbolT Emmental::PopSymbol()
 {
 	if (ProgramStack.empty())
 	{
-		ErrorStream << "Error: Tried popping symbol from empty stack. Returning default value." << std::endl;
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+
+		ErrorStream << "Tried popping symbol from empty stack. Returning default value." << std::endl;
 		return SymbolT();
 	}
 
@@ -32,7 +39,10 @@ ProgramT Emmental::PopProgram()
 {
 	if (ProgramStack.empty())
 	{
-		ErrorStream << "Error: Tried popping program from empty stack. Returning default program." << std::endl;
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried popping program from empty stack. Returning default program." << std::endl;
 		return ProgramT();
 	}
 
@@ -45,7 +55,10 @@ ProgramT Emmental::PopProgram()
 
 		if (ProgramStack.empty())
 		{
-			ErrorStream << "Error: Stack ran out before ";
+			Util::Colorize(ErrorColor, ErrorStream);
+			ErrorStream << "Error: ";
+			Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+			ErrorStream << "Stack ran out before ";
 			Util::DescribeSymbol(';', ErrorStream);
 			ErrorStream << " was found to terminate a program. Returning incomplete program." << std::endl;
 			break;
@@ -64,7 +77,10 @@ void Emmental::Push(SymbolT item)
 {
 	if (ProgramStack.size() >= EMMENTAL_MAX_STACK_SIZE)
 	{
-		ErrorStream << "Error: Tried to push symbol ";
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried to push symbol ";
 		Util::DescribeSymbol(item, ErrorStream);
 		ErrorStream << " to full stack. Ignoring." << std::endl;
 		return;
@@ -88,7 +104,10 @@ SymbolT Emmental::Dequeue()
 {
 	if (ProgramQueue.empty())
 	{
-		ErrorStream << "Error: Tried dequeuing symbol from empty queue. Returning default value." << std::endl;
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried dequeuing symbol from empty queue. Returning default value." << std::endl;
 		return SymbolT();
 	}
 
@@ -102,7 +121,10 @@ void Emmental::Enqueue(SymbolT item)
 {
 	if (ProgramQueue.size() >= EMMENTAL_MAX_QUEUE_SIZE)
 	{
-		ErrorStream << "Error: Tried to enqueue symbol ";
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried to enqueue symbol ";
 		Util::DescribeSymbol(item, ErrorStream);
 		ErrorStream << " to full queue. Ignoring." << std::endl;
 		return;
@@ -154,7 +176,10 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 {
 	if (recursionLevel >= EMMENTAL_MAX_RECURSION_LEVEL)
 	{
-		ErrorStream << "Error: Recursion level too high. Ignoring symbol ";
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Recursion level too high. Ignoring symbol ";
 		Util::DescribeSymbol(symbol, ErrorStream);
 		ErrorStream << "." << std::endl;
 		return;
@@ -168,7 +193,10 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 	}
 	else
 	{
-		ErrorStream << "Warning: Tried to interpret undefined symbol ";
+		Util::Colorize(WarningColor, ErrorStream);
+		ErrorStream << "Warning: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried to interpret undefined symbol ";
 		Util::DescribeSymbol(symbol, ErrorStream);
 		ErrorStream << ". Ignoring symbol." << std::endl;
 	}
@@ -182,7 +210,10 @@ void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> defi
 	}
 	else
 	{
-		ErrorStream << "Error: Tried to redefine symbol ";
+		Util::Colorize(ErrorColor, ErrorStream);
+		ErrorStream << "Error: ";
+		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
+		ErrorStream << "Tried to redefine symbol ";
 		Util::DescribeSymbol(symbol, ErrorStream);
 		ErrorStream << " with a null definition. Ignoring." << std::endl;
 	}

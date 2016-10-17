@@ -5,9 +5,10 @@
 #include "InterpretedDefinition.h"
 #include "InteractiveInterpreter.h"
 #include "Util.h"
+#include "Globals.h"
 #include "tclap\CmdLine.h"
 
-int InterpretFile(std::string filename, bool debug)
+int InterpretFile(std::string filename)
 {
 	Emmental interpreter(std::cin, std::cout, std::cerr);
 	std::basic_ifstream<SymbolT> file(filename, std::ios_base::in);
@@ -18,7 +19,7 @@ int InterpretFile(std::string filename, bool debug)
 		file >> symbol;
 		interpreter.Interpret(symbol);
 
-		if (debug)
+		if (Globals::DebugMode)
 		{
 			std::cout << std::endl;
 
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
 		TCLAP::CmdLine cmd("Gory Emmental is a C++ interpreter for the esoteric language Emmental.", ' ', "1.0.0");
 		
 		TCLAP::SwitchArg debugModeArg("d", "debug", "Show Stack and Queue after each symbol.");
+		TCLAP::SwitchArg colorArg("c", "color", "Use virtual console terminal sequences to colorize interpreter output.");
 		TCLAP::SwitchArg interactiveModeArg("i", "interactive", "Read symbols from the console.");
 		TCLAP::UnlabeledValueArg<std::string> inputFileArg("Input", "The Emmental code file to interpret.", true, "", "file", false);
 
@@ -48,17 +50,22 @@ int main(int argc, char** argv)
 		cmd.xorAdd(interactiveModeArg, inputFileArg);
 
 		cmd.parse(argc, argv);
-		bool debug = debugModeArg.getValue();
+		Globals::Initialize();
+
+		if (debugModeArg.isSet())
+			Globals::DebugMode = debugModeArg.getValue();
+
+		if (colorArg.isSet())
+			Globals::UseVirtualConsole = colorArg.getValue();
 
 		if (interactiveModeArg.isSet())
 		{
 			Emmental interpreter(std::cin, std::cout, std::cerr);
 			InteractiveInterpreter interactive(&interpreter);
-			interactive.DebugMode = debug;
 			return interactive.RunLoop();
 		}
 
-		return InterpretFile(inputFileArg.getValue(), debug);
+		return InterpretFile(inputFileArg.getValue());
 	}
 	catch (TCLAP::ArgException& e)
 	{
