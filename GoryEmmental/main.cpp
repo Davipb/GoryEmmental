@@ -37,26 +37,31 @@ int InterpretFile(std::string filename)
 
 int main(int argc, char** argv)
 {
+	Globals::Initialize();
+
 	try
 	{
-		TCLAP::CmdLine cmd("Gory Emmental is a C++ interpreter for the esoteric language Emmental.", ' ', "1.0.0");
+		TCLAP::CmdLine cmd("Gory Emmental is a C++ interpreter for the esoteric language Emmental.", '=', "1.0.0");
 		
-		TCLAP::SwitchArg debugModeArg("d", "debug", "Show Stack and Queue after each symbol.");
-		TCLAP::SwitchArg colorArg("c", "color", "Use virtual console terminal sequences to colorize interpreter output.");
-		TCLAP::SwitchArg interactiveModeArg("i", "interactive", "Read symbols from the console.");
+		TCLAP::SwitchArg debugModeArg("d", "debug", "Show Stack and Queue after each symbol.", Globals::DebugMode);
+		TCLAP::SwitchArg colorArg("c", "color", 
+			"Disable Virtual Console coloring for systems that support it, or forcefully enable it for systems that don't.", 
+			Globals::UseVirtualConsole);
+		TCLAP::SwitchArg optimizeArg("o", "optimize", 
+			"Bypass some formal language definitions to make programs more efficient without altering their behavior.", 
+			Globals::OptimizeProgram);
+		TCLAP::SwitchArg interactiveModeArg("i", "interactive", "Use interactive mode.", false);
 		TCLAP::UnlabeledValueArg<std::string> inputFileArg("Input", "The Emmental code file to interpret.", true, "", "file", false);
 
 		cmd.add(debugModeArg);
+		cmd.add(colorArg);
+		cmd.add(optimizeArg);
 		cmd.xorAdd(interactiveModeArg, inputFileArg);
 
 		cmd.parse(argc, argv);
-		Globals::Initialize();
-
-		if (debugModeArg.isSet())
-			Globals::DebugMode = debugModeArg.getValue();
-
-		if (colorArg.isSet())
-			Globals::UseVirtualConsole = colorArg.getValue();
+		Globals::DebugMode = debugModeArg.getValue();
+		Globals::UseVirtualConsole = colorArg.getValue();
+		Globals::OptimizeProgram = optimizeArg.getValue();
 
 		if (interactiveModeArg.isSet())
 		{

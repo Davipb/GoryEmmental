@@ -83,6 +83,18 @@ void InteractiveInterpreter::GenerateCommands()
 		interpreter->OutputStream << "Debug mode is now " << (Globals::DebugMode ? "on" : "off") << "." << std::endl;
 	}));
 
+	AddCommand(InteractiveCommand("color", "Toggles Virtual Console coloring on/off", [](Emmental* interpreter, std::string)
+	{
+		Globals::UseVirtualConsole = !Globals::UseVirtualConsole;
+		interpreter->OutputStream << "Virtual Console coloring is now " << (Globals::UseVirtualConsole ? "on" : "off") << "." << std::endl;
+	}));
+
+	AddCommand(InteractiveCommand("optimize", "Toggles program optimization on/off", [](Emmental* interpreter, std::string)
+	{
+		Globals::OptimizeProgram = !Globals::OptimizeProgram;
+		interpreter->OutputStream << "Optimization is now " << (Globals::OptimizeProgram ? "on" : "off") << "." << std::endl;
+	}));
+
 	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [](Emmental* interpreter, std::string)
 	{
 		Util::DescribeMemory(*interpreter, interpreter->OutputStream);
@@ -90,7 +102,7 @@ void InteractiveInterpreter::GenerateCommands()
 	}));
 
 	AddCommand(InteractiveCommand("pushraw",
-		"Pushes its argument into the stack (interpreted as raw ASCII bytes).\nNote: Whitespace directly after the command is also interpreted as part of the argument!",
+		"Pushes its argument into the stack (interpreted as raw ASCII bytes). Note: Whitespace directly after the command is also interpreted as part of the argument!",
 		[](Emmental* interpreter, std::string args)
 	{
 		for (auto& symbol : args)
@@ -100,7 +112,7 @@ void InteractiveInterpreter::GenerateCommands()
 	}));
 
 	AddCommand(InteractiveCommand("defs", 
-		"Without argument: Displays all current symbol definitions.\nWith symbol number as argument: Displays all captured definitions for the symbol.",
+		"Without argument: Displays all current symbol definitions. With symbol number as argument: Displays all captured definitions for the symbol.",
 		[](Emmental* interpreter, std::string arg)
 	{
 		if (arg.empty())
@@ -136,11 +148,23 @@ void InteractiveInterpreter::GenerateCommands()
 	AddCommand(InteractiveCommand("info", "Display interpreter information.", [](Emmental* interpreter, std::string)
 	{
 		interpreter->OutputStream << "Gory Emmental Interpreter 1.0.0 by Davipb" << std::endl;
+
+		Util::Colorize(Util::ConsoleColor::BrightGreen, interpreter->OutputStream);
+		interpreter->OutputStream << "== Compile-Time Settings ==" << std::endl;
+		Util::Colorize(Util::ConsoleColor::Default, interpreter->OutputStream);
 		interpreter->OutputStream << "Symbol Type: " << typeid(SymbolT).name() << std::endl;
 		interpreter->OutputStream << "Symbol Size: " << sizeof(SymbolT) << " byte(s)" << std::endl;
 		interpreter->OutputStream << "Max Stack Size: " << EMMENTAL_MAX_STACK_SIZE << std::endl;
 		interpreter->OutputStream << "Max Queue Size: " << EMMENTAL_MAX_QUEUE_SIZE << std::endl;
 		interpreter->OutputStream << "Max Recursion Level: " << EMMENTAL_MAX_RECURSION_LEVEL << std::endl;
+
+		Util::Colorize(Util::ConsoleColor::BrightGreen, interpreter->OutputStream);
+		interpreter->OutputStream << "== Runtime Settings ==" << std::endl;
+		Util::Colorize(Util::ConsoleColor::Default, interpreter->OutputStream);
+		interpreter->OutputStream << "Debug Mode: " << (Globals::DebugMode ? "On" : "Off") << std::endl;
+		interpreter->OutputStream << "Colors: " << (Globals::UseVirtualConsole ? "On" : "Off") << std::endl;
+		interpreter->OutputStream << "Optimization: " << (Globals::OptimizeProgram ? "On" : "Off") << std::endl;
+
 	}));
 }
 
@@ -154,12 +178,14 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 	if (command.find("help") == 0)
 	{
 		Interpreter->OutputStream << "Commands are case-sensitive. Arguments come right after a command." << std::endl;
+		Interpreter->OutputStream << std::endl;
+
 		for (auto& x : Commands)
 		{
-			Interpreter->OutputStream << "__" << x.GetName() << std::endl;
+			Util::Colorize(Util::ConsoleColor::BrightGreen, Interpreter->OutputStream);
+			Interpreter->OutputStream << "__" << x.GetName() << ": ";
+			Util::Colorize(Util::ConsoleColor::Default, Interpreter->OutputStream);
 			Interpreter->OutputStream << x.GetDescription() << std::endl;
-			Interpreter->OutputStream << std::endl;
-
 		}
 		return true;
 	}
@@ -172,7 +198,10 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 			return true;
 		}
 	}
-
+		
+	Util::Colorize(Util::ConsoleColor::Red, Interpreter->OutputStream);
 	Interpreter->OutputStream << "Unknown command. Use __help for a list of commands." << std::endl;
+	Util::Colorize(Util::ConsoleColor::Default, Interpreter->OutputStream);
+
 	return true;
 }

@@ -2,6 +2,7 @@
 #include "NativeDefinition.h"
 #include "InterpretedDefinition.h"
 #include "Util.h"
+#include "Globals.h"
 
 static const Util::ConsoleColor ErrorColor = Util::ConsoleColor::BrightRed;
 static const Util::ConsoleColor WarningColor = Util::ConsoleColor::BrightYellow;
@@ -139,7 +140,7 @@ void Emmental::ClearQueue()
 		ProgramQueue.pop();
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol) const { return GetDefinition(symbol, SymbolMap); }
+std::shared_ptr<EmmentalDefinition> Emmental::GetDefinition(SymbolT symbol) const { return GetDefinition(symbol, SymbolMap); }
 
 SymbolMapT Emmental::CopyDefinitions() const { return SymbolMap; }
 
@@ -185,7 +186,7 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 		return;
 	}
 
-	EmmentalDefinition* definition = GetDefinition(symbol, state);
+	std::shared_ptr<EmmentalDefinition> definition = GetDefinition(symbol, state);
 
 	if (definition)
 	{
@@ -205,18 +206,14 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition)
 {
 	if (definition)
-	{
 		SymbolMap[symbol] = definition;
-	}
 	else
-	{
-		Util::Colorize(ErrorColor, ErrorStream);
-		ErrorStream << "Error: ";
-		Util::Colorize(Util::ConsoleColor::Default, ErrorStream);
-		ErrorStream << "Tried to redefine symbol ";
-		Util::DescribeSymbol(symbol, ErrorStream);
-		ErrorStream << " with a null definition. Ignoring." << std::endl;
-	}
+		Undefine(symbol);
+}
+
+void Emmental::Undefine(SymbolT symbol)
+{
+	SymbolMap.erase(symbol);
 }
 
 void Emmental::Reset()
@@ -315,22 +312,39 @@ void Emmental::GenerateDefaultSymbols()
 	{
 		SymbolT symbol = interpreter->PopSymbol();
 		ProgramT program = interpreter->PopProgram();
-		SymbolMapT state = interpreter->CopyDefinitions(program);
 
-		interpreter->Redefine(
-			symbol, 
-			std::make_shared<InterpretedDefinition>(program, state)
-		);
+		if (program.empty() && Globals::OptimizeProgram)
+		{
+			// If the program is empty, just undefine the symbol (make it a no-op)
+			interpreter->Undefine(symbol);
+		}
+		else if (program.size() == 1 && Globals::OptimizeProgram)
+		{
+			// For single-symbol programs, just set the definition to the single symbol's definition
+			std::shared_ptr<EmmentalDefinition> definition = interpreter->GetDefinition(program[0]);
+
+			// Redefine() will take care of undefining the symbol if 'definition' is nullptr (aka single symbol in program is undefined/no-op)
+			interpreter->Redefine(symbol, definition);
+		}
+		else
+		{
+			SymbolMapT state = interpreter->CopyDefinitions(program);
+
+			interpreter->Redefine(
+				symbol,
+				std::make_shared<InterpretedDefinition>(program, state)
+			);
+		}
 
 	});
 }
 
-EmmentalDefinition* Emmental::GetDefinition(SymbolT symbol, const SymbolMapT& state) const
+std::shared_ptr<EmmentalDefinition> Emmental::GetDefinition(SymbolT symbol, const SymbolMapT& state) const
 {
 	auto result = state.find(symbol);
 
 	if (result == state.end())
 		return nullptr;
 
-	return result->second.get();
+	return result->second;
 }

@@ -39,7 +39,7 @@ public:
 	void ClearQueue();
 
 	// Gets the current definition of a symbol. Returns nullptr if not defined.
-	EmmentalDefinition* GetDefinition(SymbolT symbol) const;
+	std::shared_ptr<EmmentalDefinition> GetDefinition(SymbolT symbol) const;
 	// Makes a copy of all current definitions
 	SymbolMapT CopyDefinitions() const;
 	// Makes a copy of all current definitions used in a program.
@@ -59,6 +59,9 @@ public:
 	// Redefines a symbol
 	void Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition);
 
+	// Undefines a symbol
+	void Undefine(SymbolT symbol);
+
 	// Resets definitions, clears the stack and clears the queue.
 	void Reset();
 
@@ -70,5 +73,5 @@ private:
 
 	void GenerateDefaultSymbols();
 
-	EmmentalDefinition* GetDefinition(SymbolT symbol, const SymbolMapT& state) const;
+	std::shared_ptr<EmmentalDefinition> GetDefinition(SymbolT symbol, const SymbolMapT& state) const;
 };

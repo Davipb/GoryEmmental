@@ -6,6 +6,7 @@
 
 bool Globals::DebugMode = false;
 bool Globals::UseVirtualConsole = false;
+bool Globals::OptimizeProgram = false;
 
 void Globals::Initialize()
 {
@@ -14,7 +15,7 @@ void Globals::Initialize()
 
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
 	// Target Windows SDK doesn't support Virtual Terminal, default to not using
-	UseVirtualConsole = false
+	UseVirtualConsole = false;
 #else // !ENABLE_VIRTUAL_TERMINAL_PROCESSING
 
 	// Check if Windows version supports Virtual Console color
