@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 		if (interactiveModeArg.isSet())
 		{
 			Emmental interpreter(std::cin, std::cout, std::cerr);
-			InteractiveInterpreter interactive(&interpreter);
+			InteractiveInterpreter interactive(interpreter);
 			return interactive.RunLoop();
 		}
 
