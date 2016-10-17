@@ -1,6 +1,7 @@
 #include "Emmental.h"
 #include "NativeDefinition.h"
 #include "InterpretedDefinition.h"
+#include "Util.h"
 
 Emmental::Emmental(std::istream& inputStream, std::ostream& outputStream, std::ostream& errorStream)
 	: InputStream(inputStream), OutputStream(outputStream), ErrorStream(errorStream)
@@ -44,7 +45,9 @@ ProgramT Emmental::PopProgram()
 
 		if (ProgramStack.empty())
 		{
-			ErrorStream << "Error: Stack ran out before ';' was found to terminate a program. Returning incomplete program." << std::endl;
+			ErrorStream << "Error: Stack ran out before ";
+			Util::DescribeSymbol(';', ErrorStream);
+			ErrorStream << " was found to terminate a program. Returning incomplete program." << std::endl;
 			break;
 		}
 		else
@@ -61,7 +64,9 @@ void Emmental::Push(SymbolT item)
 {
 	if (ProgramStack.size() >= EMMENTAL_MAX_STACK_SIZE)
 	{
-		ErrorStream << "Error: Tried to push symbol to full stack. Ignoring." << std::endl;
+		ErrorStream << "Error: Tried to push symbol ";
+		Util::DescribeSymbol(item, ErrorStream);
+		ErrorStream << " to full stack. Ignoring." << std::endl;
 		return;
 	}
 
@@ -97,7 +102,9 @@ void Emmental::Enqueue(SymbolT item)
 {
 	if (ProgramQueue.size() >= EMMENTAL_MAX_QUEUE_SIZE)
 	{
-		ErrorStream << "Error: Tried to enqueue symbol to full queue. Ignoring." << std::endl;
+		ErrorStream << "Error: Tried to enqueue symbol ";
+		Util::DescribeSymbol(item, ErrorStream);
+		ErrorStream << " to full queue. Ignoring." << std::endl;
 		return;
 	}
 
@@ -147,24 +154,38 @@ void Emmental::Interpret(SymbolT symbol, const SymbolMapT& state, std::size_t re
 {
 	if (recursionLevel >= EMMENTAL_MAX_RECURSION_LEVEL)
 	{
-		ErrorStream << "Error: Recursion level too high. Ignoring symbol '" << symbol << "'." << std::endl;
+		ErrorStream << "Error: Recursion level too high. Ignoring symbol ";
+		Util::DescribeSymbol(symbol, ErrorStream);
+		ErrorStream << "." << std::endl;
 		return;
 	}
 
 	EmmentalDefinition* definition = GetDefinition(symbol, state);
 
 	if (definition)
+	{
 		definition->Execute(this, recursionLevel + 1);
+	}
 	else
-		ErrorStream << "Warning: Tried to interpret undefined symbol '" << symbol << "'. Ignoring symbol." << std::endl;
+	{
+		ErrorStream << "Warning: Tried to interpret undefined symbol ";
+		Util::DescribeSymbol(symbol, ErrorStream);
+		ErrorStream << ". Ignoring symbol." << std::endl;
+	}
 }
 
 void Emmental::Redefine(SymbolT symbol, std::shared_ptr<EmmentalDefinition> definition)
 {
 	if (definition)
+	{
 		SymbolMap[symbol] = definition;
+	}
 	else
-		ErrorStream << "Error: Tried to redefine symbol '" << symbol << "' with a null definition." << std::endl;
+	{
+		ErrorStream << "Error: Tried to redefine symbol ";
+		Util::DescribeSymbol(symbol, ErrorStream);
+		ErrorStream << " with a null definition. Ignoring." << std::endl;
+	}
 }
 
 void Emmental::Reset()

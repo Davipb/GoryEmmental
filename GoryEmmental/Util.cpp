@@ -116,7 +116,7 @@ void Util::DescribeDefinition(SymbolT symbol, const EmmentalDefinition* const de
 	if (interpreted)
 	{
 		for (auto&& x : interpreted->GetProgram())
-			output << x;
+			output << GetPrintable(x);
 
 		if (full)
 		{			
