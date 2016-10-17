@@ -1,0 +1,5 @@
+This folder contains TCLAP, a Command Line Parser for C++.
+
+TLCAP is **not** property of or made by the authors of Gory Emmental. It is here simply as a dependency.
+
+To use TCLAP in your own project, check [TCLAP's Homepage](http://tclap.sourceforge.net/).
