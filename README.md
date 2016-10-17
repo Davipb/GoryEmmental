@@ -1,6 +1,8 @@
 # Gory Emmental
 Gory Emmental is an interpreter for the [Emmental](https://github.com/catseye/Emmental/) esoteric language, written in C++.
 
+![](http://i.imgur.com/2axPluX.png)
+
 ## Usage
 ### Interpreting a File
 `GoryEmmental file` will interpret the file located at `file` as an Emmental program. Please note that the file will be interpreted in full, including tabs, spaces, and newline characters. If you don't want that, use the `-w` option (see more about options below).
