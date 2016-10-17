@@ -82,15 +82,25 @@ void InteractiveInterpreter::GenerateCommands()
 		interpreter->OutputStream << "Debug mode is now " << (DebugMode ? "on" : "off") << "." << std::endl;
 	}));
 
-	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [&](Emmental* interpreter, std::string)
+	AddCommand(InteractiveCommand("memory", "Shows the current stack and queue", [](Emmental* interpreter, std::string)
 	{
 		Util::DescribeMemory(*interpreter, interpreter->OutputStream);
 		interpreter->OutputStream << std::endl;
 	}));
 
+	AddCommand(InteractiveCommand("pushraw",
+		"Pushes its argument into the stack (interpreted as raw ASCII bytes).\nNote: Whitespace directly after the command is also interpreted as part of the argument!",
+		[](Emmental* interpreter, std::string args)
+	{
+		for (auto& symbol : args)
+			interpreter->Push(symbol);
+
+		interpreter->OutputStream << "Pushed " << args.length() << " bytes into the stack.";
+	}));
+
 	AddCommand(InteractiveCommand("defs", 
 		"Without argument: Displays all current symbol definitions.\nWith symbol number as argument: Displays all captured definitions for the symbol.",
-		[&](Emmental* interpreter, std::string arg)
+		[](Emmental* interpreter, std::string arg)
 	{
 		if (arg.empty())
 		{
