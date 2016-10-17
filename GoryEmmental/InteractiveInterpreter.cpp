@@ -103,13 +103,23 @@ void InteractiveInterpreter::GenerateCommands()
 	}));
 
 	AddCommand(InteractiveCommand("pushraw",
-		"Pushes its argument into the stack (interpreted as raw ASCII bytes). Note: Whitespace directly after the command is also interpreted as part of the argument!",
+		"Pushes its argument into the stack (interpreted as raw ASCII bytes).",
 		[](Emmental& interpreter, std::string args)
 	{
 		for (auto& symbol : args)
+		{
 			interpreter.Push(symbol);
+			Util::DescribeSymbol(symbol, interpreter.OutputStream);
+			interpreter.OutputStream << ", ";
+		}
 
-		interpreter.OutputStream << "Pushed " << args.length() << " bytes into the stack.";
+		interpreter.OutputStream << std::endl;
+		interpreter.OutputStream << "Pushed " << args.length() << " bytes into the stack." << std::endl;
+		interpreter.OutputStream << std::endl;
+
+		Util::DescribeMemory(interpreter, interpreter.OutputStream);
+		interpreter.OutputStream << std::endl;
+
 	}));
 
 	AddCommand(InteractiveCommand("defs", 
@@ -195,7 +205,12 @@ bool InteractiveInterpreter::ParseCommand(std::string input)
 	{
 		if (command.find(x.GetName()) == 0)
 		{
-			x.Execute(Interpreter, command.substr(x.GetName().size(), command.size() - x.GetName().size()));
+			std::string argument = command.substr(x.GetName().size(), command.size() - x.GetName().size());
+			// Trim initial space from argument to allow "__command arg" instead of just "__commandarg"
+			if (argument.length() > 0 && argument[0] == ' ')
+				argument = argument.substr(1, argument.length() - 1);
+
+			x.Execute(Interpreter, argument);
 			return true;
 		}
 	}
