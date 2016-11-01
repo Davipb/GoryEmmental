@@ -9,46 +9,58 @@
 #include "Globals.h"
 #include "tclap\CmdLine.h"
 
-int InterpretFile(std::string filename)
+int InterpretFile(const std::string& filename)
 {
-	Emmental interpreter(std::cin, std::cout, std::cerr);
-	std::basic_ifstream<SymbolT> file(filename, std::ios_base::in | std::ios_base::binary);
+	Emmental interpreter(std::cin, std::cout, std::cerr);	
 
-	if (file.fail() || file.bad())
+#if _WIN32 && _UNICODE
+	// Open file using UTF16 filename
+	// Non-Standard MSVC extension, allows usage of std::wstring for Unicode filenames
+	std::basic_ifstream<SymbolT> file(Util::ToUtf16(filename), std::ios_base::binary | std::ios_base::in);
+#else // _WIN32 && _UNICODE
+	std::basic_ifstream<SymbolT> file(filename, std::ios_base::binary | std::ios_base::in);
+#endif // _WIN32 && _UNICODE
+	
+	try
 	{
-		std::cerr << "Couldn't open file.";
-		return EXIT_FAILURE;
-	}
+		file.exceptions(decltype(file)::failbit);
 
-	while (!file.eof())
-	{
-		int got = file.get();
-		if (got == -1)
-			continue;
-
-		SymbolT symbol = got;
-
-		if (Globals::IgnoreWhitespace &&std::isspace(symbol))
-			continue;
-
-		interpreter.Interpret(symbol);
-
-		if (Globals::DebugMode)
+		SymbolT symbol;
+		while (file.get(symbol))
 		{
-			std::cout << std::endl;
-			std::cout << "Interpreted Symbol: ";
-			Util::DescribeSymbol(symbol, std::cout);
-			std::cout << std::endl;
-			Util::DescribeMemory(interpreter, std::cout);
-			std::cout << std::endl;
+			if (Globals::IgnoreWhitespace && std::isspace(symbol))
+				continue;
+
+			interpreter.Interpret(symbol);
+
+			if (Globals::DebugMode && !Globals::QuietMode)
+			{
+				std::cout << std::endl;
+				std::cout << "Interpreted Symbol: ";
+				Util::DescribeSymbol(symbol, std::cout);
+				std::cout << std::endl;
+				Util::DescribeMemory(interpreter, std::cout);
+				std::cout << std::endl;
+			}
+		}
+
+		file.close();
+	}
+	catch (const decltype(file)::failure& fail)
+	{
+		if (!file.eof())
+		{
+			if (!Globals::QuietMode)
+				std::cerr << "Error " << fail.code() << " while trying to read file: " << fail.what() << std::endl;
+
+			return EXIT_FAILURE;
 		}
 	}
 
-	file.close();
 	return EXIT_SUCCESS;
 }
 
-int main(int argc, char** argv)
+int Start(std::vector<std::string>& args)
 {
 	Globals::Initialize();
 
@@ -72,7 +84,7 @@ int main(int argc, char** argv)
 		TCLAP::UnlabeledValueArg<std::string> inputFileArg("Input", "The Emmental code file to interpret.", true, "", "file", false);
 		cmd.xorAdd(interactiveModeArg, inputFileArg);
 
-		cmd.parse(argc, argv);
+		cmd.parse(args);
 		Globals::DebugMode = debugModeArg.getValue();
 		Globals::UseVirtualConsole = colorArg.getValue();
 		Globals::OptimizeProgram = optimizeArg.getValue();
@@ -95,3 +107,29 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 }
+
+#if _WIN32 && _UNICODE
+int wmain(int argc, wchar_t** argv)
+{
+	// Convert from UTF16 to UTF8
+	std::vector<std::string> args;
+	for (int i = 0; i < argc; i++)
+	{
+		args.emplace_back(Util::ToUtf8(argv[i]));
+	}
+
+	return Start(args);
+}
+#else // _WIN32 && _UNICODE
+int main(int argc, char** argv)
+{
+	// Put arguments in a vector
+	std::vector<std::string> args;
+	for (int i = 0; i < argc; i++)
+	{
+		args.emplace_back(argv[i]);
+	}
+
+	return Start(args);
+}
+#endif // _WIN32 && _UNICODE

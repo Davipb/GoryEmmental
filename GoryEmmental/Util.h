@@ -20,4 +20,9 @@ namespace Util
 	void DescribeProgram(const ProgramT& program, std::ostream& output);
 	void Colorize(ConsoleColor foreground, std::ostream& output);
 	void Colorize(ConsoleColor foreground, ConsoleColor background, std::ostream& output);
+
+#if _WIN32
+	std::string ToUtf8(std::wstring str);
+	std::wstring ToUtf16(std::string str);
+#endif
 }

@@ -3,6 +3,10 @@
 #include <iomanip>
 #include "Globals.h"
 
+#if _WIN32
+#	include <Windows.h>
+#endif
+
 static const Util::ConsoleColor SingleSymbolColor = Util::ConsoleColor::Green;
 static const Util::ConsoleColor MultiSymbolColor = Util::ConsoleColor::BrightCyan;
 static const Util::ConsoleColor MultiSymbolAltColor = Util::ConsoleColor::BrightYellow;
@@ -223,3 +227,33 @@ void Util::Colorize(ConsoleColor foreground, ConsoleColor background, std::ostre
 	}
 }
 #undef CSI
+
+#if _WIN32
+std::string Util::ToUtf8(std::wstring str)
+{
+	std::string result;
+
+	int bufferSize = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), nullptr, 0, NULL, NULL);
+	if (bufferSize > 0)
+	{
+		result.resize(bufferSize);
+		WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &result[0], bufferSize, NULL, NULL);
+	}
+
+	return result;
+}
+
+std::wstring Util::ToUtf16(std::string str)
+{
+	std::wstring result;
+
+	int bufferSize = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), nullptr, 0);
+	if (bufferSize > 0)
+	{
+		result.resize(bufferSize);
+		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &result[0], bufferSize);
+	}
+
+	return result;
+}
+#endif // _WIN32

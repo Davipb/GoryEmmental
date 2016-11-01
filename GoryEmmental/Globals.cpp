@@ -1,7 +1,10 @@
 #include "Globals.h"
 
 #if _WIN32
-#include <Windows.h>
+#	include <Windows.h>
+#	ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#		error "Windows SDK outdated. Please use version 10 or higher."
+#	endif // !ENABLE_VIRTUAL_TERMINAL_PROCESSING
 #endif
 
 bool Globals::DebugMode = false;
@@ -11,16 +14,9 @@ bool Globals::IgnoreWhitespace = false;
 bool Globals::QuietMode = false;
 bool Globals::LenientMode = false;
 
-void Globals::Initialize()
-{
-
 #if _WIN32
-
-#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
-	// Target Windows SDK doesn't support Virtual Terminal, default to not using
-	UseVirtualConsole = false;
-#else // !ENABLE_VIRTUAL_TERMINAL_PROCESSING
-
+static bool TryEnableWin32Color()
+{
 	// Check if Windows version supports Virtual Console color
 	// Windows 10 Anniversary Edition and up should support it
 
@@ -28,28 +24,25 @@ void Globals::Initialize()
 	if (hOut == INVALID_HANDLE_VALUE || hOut == nullptr)
 	{
 		// Unknown output device, don't use colors by default
-		UseVirtualConsole = false;
+		return false;
 	}
-	else
+
+	DWORD dwMode = 0;
+	if (!GetConsoleMode(hOut, &dwMode))
 	{
-		DWORD dwMode = 0;
-		if (!GetConsoleMode(hOut, &dwMode))
-		{
-			// Unable to get console mode, default to no colors
-			UseVirtualConsole = false;
-		}
-		else
-		{
-			dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-			// Use Virtual Console only if enabling it was a success
-			UseVirtualConsole = SetConsoleMode(hOut, dwMode);		
-		}
-
+		// Unable to get console mode, default to no colors
+		return false;
 	}
-#endif // !ENABLE_VIRTUAL_TERMINAL_PROCESSING
 
-#else // _WIN32
-	// Unknown system, default to no color.
-	UseVirtualConsole = false;
-#endif // _WIN32
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	// Use Virtual Console only if enabling it was a success
+	return SetConsoleMode(hOut, dwMode) != 0;
+}
+#endif
+
+void Globals::Initialize()
+{
+#if _WIN32
+	UseVirtualConsole = TryEnableWin32Color();
+#endif
 }
